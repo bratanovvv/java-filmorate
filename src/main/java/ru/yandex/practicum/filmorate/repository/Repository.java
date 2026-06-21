@@ -3,10 +3,12 @@ package ru.yandex.practicum.filmorate.repository;
 import java.util.List;
 import java.util.Optional;
 
-public interface Repository<ID, T> {
-    Optional<T> getById(ID id);
+public interface Repository<K, V> {
+    Optional<V> getById(K id);
 
-    List<T> getAll();
+    List<V> getAll();
 
-    T save(T t);
+    V save(V t);
+
+    void clear();
 }

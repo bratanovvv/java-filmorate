@@ -12,7 +12,7 @@ public class UserRepository extends AbstractRepository<Integer, User> {
 
     @Override
     public User save(User user) {
-        if(user.getId() == null) {
+        if (user.getId() == null) {
             user.setId(nextId.getAndIncrement());
         }
         repository.put(user.getId(), user);
