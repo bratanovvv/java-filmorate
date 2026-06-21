@@ -4,6 +4,7 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 
 import java.util.Set;
@@ -24,14 +25,23 @@ public abstract class BaseValidationEntityTest<T> {
      * Общий Hibernate Validator для всех тестов.
      */
     protected static Validator validator;
+    protected static ValidatorFactory factory;
 
     /**
      * Инициализация ValidatorFactory перед запуском всех тестов.
      */
     @BeforeAll
     static void initValidator() {
-        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+        factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();
+    }
+
+    /**
+     * Освобождение ValidatorFactory после запуска всех тестов.
+     */
+    @AfterAll
+    static void tearDownValidator() {
+        factory.close();
     }
 
     /**
