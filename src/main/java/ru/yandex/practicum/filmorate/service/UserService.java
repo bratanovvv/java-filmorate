@@ -1,27 +1,26 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.ApiException;
+import ru.yandex.practicum.filmorate.exception.ErrorCode;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.repository.impl.UserRepository;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 
 @Slf4j
+@RequiredArgsConstructor
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
 
-    public UserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
-
     public User getUser(int id) {
         return userRepository.getById(id)
                 .orElseThrow(() ->
-                        new NoSuchElementException("Пользователь с id=" + id + " не найден"));
+                        new ApiException(ErrorCode.USER_NOT_FOUND, id));
     }
 
     public List<User> getUsers() {

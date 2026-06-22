@@ -4,12 +4,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import ru.yandex.practicum.filmorate.exception.ApiException;
+import ru.yandex.practicum.filmorate.exception.ErrorCode;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.repository.impl.FilmRepository;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -62,10 +63,11 @@ class FilmServiceTest {
 
     @Test
     void shouldThrowWhenFilmNotFound() {
-        assertThrows(
-                NoSuchElementException.class,
+        ApiException ex = assertThrows(
+                ApiException.class,
                 () -> filmService.getFilm(999)
         );
+        assertEquals(ErrorCode.FILM_NOT_FOUND, ex.getCode());
     }
 
     // -------- UPDATE --------
@@ -95,10 +97,11 @@ class FilmServiceTest {
         Film film = validFilm();
         film.setId(999);
 
-        assertThrows(
-                NoSuchElementException.class,
+        ApiException ex = assertThrows(
+                ApiException.class,
                 () -> filmService.updateFilm(film)
         );
+        assertEquals(ErrorCode.FILM_NOT_FOUND, ex.getCode());
     }
 
     // -------- LIST --------

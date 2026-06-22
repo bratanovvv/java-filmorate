@@ -1,7 +1,8 @@
-package ru.yandex.practicum.filmorate.model.validation;
+package ru.yandex.practicum.filmorate.model.validation.annotation;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
+import ru.yandex.practicum.filmorate.model.validation.validator.MinDateValidator;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -31,7 +32,7 @@ public @interface MinDate {
      */
     String value();
 
-    String message() default "Дата должна быть после {value}";
+    String message() default "validator.date.isAfter";
 
     Class<?>[] groups() default {};
 

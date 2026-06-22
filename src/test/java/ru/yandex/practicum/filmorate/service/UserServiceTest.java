@@ -4,12 +4,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import ru.yandex.practicum.filmorate.exception.ApiException;
+import ru.yandex.practicum.filmorate.exception.ErrorCode;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.repository.impl.UserRepository;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -68,10 +69,12 @@ class UserServiceTest {
 
     @Test
     void shouldThrowWhenUserNotFound() {
-        assertThrows(
-                NoSuchElementException.class,
+        ApiException ex = assertThrows(
+                ApiException.class,
                 () -> userService.getUser(999)
         );
+
+        assertEquals(ErrorCode.USER_NOT_FOUND, ex.getCode());
     }
 
     // -------- UPDATE --------
@@ -101,10 +104,12 @@ class UserServiceTest {
         user.setEmail("test@mail.com");
         user.setLogin("login");
 
-        assertThrows(
-                NoSuchElementException.class,
+        ApiException ex = assertThrows(
+                ApiException.class,
                 () -> userService.updateUser(user)
         );
+
+        assertEquals(ErrorCode.USER_NOT_FOUND, ex.getCode());
     }
 
     // -------- LIST --------

@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,13 +16,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/films")
+@RequiredArgsConstructor
 public class FilmController {
 
     private final FilmService filmService;
-
-    public FilmController(FilmService filmService) {
-        this.filmService = filmService;
-    }
 
     @GetMapping("/{id}")
     public Film getFilm(@PathVariable int id) {
