@@ -1,14 +1,11 @@
-package ru.yandex.practicum.filmorate.repository.impl;
+package ru.yandex.practicum.filmorate.repository.impl.inmemory;
 
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.repository.AbstractRepository;
-
-import java.util.concurrent.atomic.AtomicInteger;
+import ru.yandex.practicum.filmorate.repository.UserRepository;
 
 @Component
-public class UserRepository extends AbstractRepository<Integer, User> {
-    private final AtomicInteger nextId = new AtomicInteger(1);
+public class InMemoryUserRepository extends InMemoryAbstractRepository<Integer, User> implements UserRepository {
 
     @Override
     public User save(User user) {

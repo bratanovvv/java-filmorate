@@ -6,8 +6,10 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ApiException;
 import ru.yandex.practicum.filmorate.exception.ErrorCode;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.repository.impl.FilmRepository;
+import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.repository.FilmRepository;
 
+import java.util.Comparator;
 import java.util.List;
 
 @Slf4j
@@ -16,6 +18,7 @@ import java.util.List;
 public class FilmService {
 
     private final FilmRepository filmRepository;
+    private final UserService userService;
 
     public Film getFilm(int id) {
         return filmRepository.getById(id)
@@ -45,5 +48,32 @@ public class FilmService {
         log.info("Обновлён фильм: id={}, name={}", existingFilm.getId(), existingFilm.getName());
 
         return filmRepository.save(existingFilm);
+    }
+
+    public void addLike(int filmId, int userId) {
+        Film film = getFilm(filmId);
+        User user = userService.getUser(userId);
+
+        film.getLikes().add(userId);
+        filmRepository.save(film);
+
+        log.info("Пользователь id={} поставил лайк фильму id={}", userId, filmId);
+    }
+
+    public void removeLike(int filmId, int userId) {
+        Film film = getFilm(filmId);
+        User user = userService.getUser(userId);
+
+        film.getLikes().remove(userId);
+        filmRepository.save(film);
+
+        log.info("Пользователь id={} убрал лайк с фильма id={}", userId, filmId);
+    }
+
+    public List<Film> getPopularFilms(int count) {
+        return filmRepository.getAll().stream()
+                .sorted(Comparator.comparingInt((Film f) -> f.getLikes().size()).reversed())
+                .limit(count)
+                .toList();
     }
 }

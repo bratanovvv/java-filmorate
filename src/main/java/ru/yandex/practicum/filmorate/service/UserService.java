@@ -6,9 +6,10 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ApiException;
 import ru.yandex.practicum.filmorate.exception.ErrorCode;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.repository.impl.UserRepository;
+import ru.yandex.practicum.filmorate.repository.UserRepository;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -52,6 +53,49 @@ public class UserService {
         log.info("Обновлён пользователь: id={}, login={}", updated.getId(), updated.getLogin());
 
         return updated;
+    }
+
+    public void addFriend(int userId, int friendId) {
+        User user = getUser(userId);
+        User friend = getUser(friendId);
+
+        user.getFriends().add(friendId);
+        friend.getFriends().add(userId);
+
+        userRepository.save(user);
+        userRepository.save(friend);
+
+        log.info("Пользователи id={} и id={} теперь друзья", userId, friendId);
+    }
+
+    public void removeFriend(int userId, int friendId) {
+        User user = getUser(userId);
+        User friend = getUser(friendId);
+
+        user.getFriends().remove(friendId);
+        friend.getFriends().remove(userId);
+
+        userRepository.save(user);
+        userRepository.save(friend);
+
+        log.info("Пользователи id={} и id={} больше не друзья", userId, friendId);
+    }
+
+    public List<User> getUserFriends(int userId) {
+        User user = getUser(userId);
+        return userRepository.findAllByIds(user.getFriends());
+    }
+
+    public List<User> getCommonFriends(int userId, int otherId) {
+        User user = getUser(userId);
+        User other = getUser(otherId);
+
+        return user.getFriends().stream()
+                .filter(other.getFriends()::contains)
+                .collect(Collectors.collectingAndThen(
+                        Collectors.toSet(),
+                        userRepository::findAllByIds
+                ));
     }
 
     private void normalizeUser(User user) {

@@ -1,5 +1,8 @@
 package ru.yandex.practicum.filmorate.exception;
 
+import lombok.Getter;
+
+@Getter
 public class ApiException extends RuntimeException {
 
     private final ErrorCode code;
@@ -10,11 +13,4 @@ public class ApiException extends RuntimeException {
         this.args = args;
     }
 
-    public ErrorCode getCode() {
-        return code;
-    }
-
-    public Object[] getArgs() {
-        return args;
-    }
 }

@@ -7,7 +7,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import ru.yandex.practicum.filmorate.exception.ApiException;
 import ru.yandex.practicum.filmorate.exception.ErrorCode;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.repository.impl.FilmRepository;
+import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.repository.FilmRepository;
+import ru.yandex.practicum.filmorate.repository.UserRepository;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -24,11 +26,18 @@ class FilmServiceTest {
     private FilmService filmService;
 
     @Autowired
+    private UserService userService;
+
+    @Autowired
     private FilmRepository filmRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @BeforeEach
     void setUp() {
         filmRepository.clear();
+        userRepository.clear();
     }
 
     // -------- CREATE --------
@@ -123,6 +132,126 @@ class FilmServiceTest {
         assertEquals(2, films.size());
     }
 
+    // -------- LIKES --------
+
+    @Test
+    void shouldAddLike() {
+        Film film = filmService.saveFilm(validFilm());
+        User user = userService.saveUser(validUser());
+
+        filmService.addLike(film.getId(), user.getId());
+
+        Film likedFilm = filmService.getFilm(film.getId());
+        assertEquals(1, likedFilm.getLikes().size());
+        assertTrue(likedFilm.getLikes().contains(user.getId()));
+    }
+
+    @Test
+    void shouldBeIdempotentWhenAddingDuplicateLike() {
+        Film film = filmService.saveFilm(validFilm());
+        User user = userService.saveUser(validUser());
+
+        filmService.addLike(film.getId(), user.getId());
+        filmService.addLike(film.getId(), user.getId());
+
+        Film likedFilm = filmService.getFilm(film.getId());
+        assertEquals(1, likedFilm.getLikes().size());
+    }
+
+    @Test
+    void shouldRemoveLike() {
+        Film film = filmService.saveFilm(validFilm());
+        User user = userService.saveUser(validUser());
+        filmService.addLike(film.getId(), user.getId());
+
+        filmService.removeLike(film.getId(), user.getId());
+
+        Film likedFilm = filmService.getFilm(film.getId());
+        assertTrue(likedFilm.getLikes().isEmpty());
+    }
+
+    @Test
+    void shouldBeIdempotentWhenRemovingNonExistentLike() {
+        Film film = filmService.saveFilm(validFilm());
+        User user = userService.saveUser(validUser());
+
+        filmService.removeLike(film.getId(), user.getId());
+
+        Film likedFilm = filmService.getFilm(film.getId());
+        assertTrue(likedFilm.getLikes().isEmpty());
+    }
+
+    @Test
+    void shouldThrowWhenLikeFilmNotFound() {
+        User user = userService.saveUser(validUser());
+
+        ApiException ex = assertThrows(
+                ApiException.class,
+                () -> filmService.addLike(999, user.getId())
+        );
+        assertEquals(ErrorCode.FILM_NOT_FOUND, ex.getCode());
+    }
+
+    @Test
+    void shouldThrowWhenLikeUserNotFound() {
+        Film film = filmService.saveFilm(validFilm());
+
+        ApiException ex = assertThrows(
+                ApiException.class,
+                () -> filmService.addLike(film.getId(), 999)
+        );
+        assertEquals(ErrorCode.USER_NOT_FOUND, ex.getCode());
+    }
+
+    @Test
+    void shouldThrowWhenRemoveLikeUserNotFound() {
+        Film film = filmService.saveFilm(validFilm());
+
+        ApiException ex = assertThrows(
+                ApiException.class,
+                () -> filmService.removeLike(film.getId(), 999)
+        );
+        assertEquals(ErrorCode.USER_NOT_FOUND, ex.getCode());
+    }
+
+    @Test
+    void shouldReturnPopularFilms() {
+        Film film1 = filmService.saveFilm(validFilm());
+        Film film2 = filmService.saveFilm(validFilm());
+        Film film3 = filmService.saveFilm(validFilm());
+        User user1 = userService.saveUser(validUser());
+        User user2 = userService.saveUser(validUser());
+
+        filmService.addLike(film1.getId(), user1.getId());
+        filmService.addLike(film1.getId(), user2.getId());
+        filmService.addLike(film2.getId(), user1.getId());
+
+        List<Film> popular = filmService.getPopularFilms(2);
+
+        assertEquals(2, popular.size());
+        assertEquals(film1.getId(), popular.get(0).getId());
+        assertEquals(film2.getId(), popular.get(1).getId());
+    }
+
+    @Test
+    void shouldReturnAllFilmsWhenCountExceedsTotal() {
+        Film film1 = filmService.saveFilm(validFilm());
+        Film film2 = filmService.saveFilm(validFilm());
+        User user = userService.saveUser(validUser());
+        filmService.addLike(film1.getId(), user.getId());
+
+        List<Film> popular = filmService.getPopularFilms(100);
+
+        assertEquals(2, popular.size());
+    }
+
+    @Test
+    void shouldReturnEmptyListWhenNoFilms() {
+        List<Film> popular = filmService.getPopularFilms(10);
+
+        assertTrue(popular.isEmpty());
+    }
+
     // -------- helper --------
 
     private Film validFilm() {
@@ -132,5 +261,14 @@ class FilmServiceTest {
         film.setReleaseDate(LocalDate.of(1999, 3, 31));
         film.setDuration(136);
         return film;
+    }
+
+    private User validUser() {
+        User user = new User();
+        user.setEmail("test@mail.com");
+        user.setLogin("testlogin");
+        user.setName("Test User");
+        user.setBirthday(LocalDate.of(2000, 1, 1));
+        return user;
     }
 }

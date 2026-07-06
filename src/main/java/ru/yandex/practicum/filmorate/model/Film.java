@@ -3,11 +3,15 @@ package ru.yandex.practicum.filmorate.model;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.Setter;
 import ru.yandex.practicum.filmorate.constants.ValidationKeys;
 import ru.yandex.practicum.filmorate.model.validation.annotation.MinDate;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 public class Film {
@@ -24,4 +28,7 @@ public class Film {
 
     @Positive(message = ValidationKeys.FILM_DURATION_POSITIVE)
     private int duration;
+
+    @Setter(AccessLevel.NONE)
+    private Set<Integer> likes = new HashSet<>();
 }
