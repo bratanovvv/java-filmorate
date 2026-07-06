@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -9,35 +10,35 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/films")
+@RequestMapping("/users")
 @RequiredArgsConstructor
-public class FilmController {
+public class UserController {
 
-    private final FilmService filmService;
+    private final UserService userService;
 
     @GetMapping("/{id}")
-    public Film getFilm(@PathVariable int id) {
-        return filmService.getFilm(id);
+    public User getUser(@Positive @PathVariable int id) {
+        return userService.getUser(id);
     }
 
     @GetMapping
-    public List<Film> getFilms() {
-        return filmService.getFilms();
+    public List<User> getUsers() {
+        return userService.getUsers();
     }
 
     @PostMapping
-    public Film createFilm(@Valid @RequestBody Film film) {
-        return filmService.saveFilm(film);
+    public User createUser(@Valid @RequestBody User user) {
+        return userService.saveUser(user);
     }
 
     @PutMapping
-    public Film updateFilm(@Valid @RequestBody Film film) {
-        return filmService.updateFilm(film);
+    public User updateUser(@Valid @RequestBody User user) {
+        return userService.updateUser(user);
     }
 }
