@@ -36,10 +36,10 @@ public class GlobalExceptionHandler {
         ErrorResponse body = ErrorResponse.builder()
                 .message(messageSource.getMessage(code.key(), ex.getArgs(), locale()))
                 .timestamp(Instant.now())
-                .path(String.format("{%s}%s", request.getMethod(), request.getRequestURI()))
+                .path(String.format("%s %s", request.getMethod(), request.getRequestURI()))
                 .build();
 
-        log.error("Ошибка приложения: {}", body.getMessage());
+        log.warn("Ошибка приложения: {}", body.getMessage());
         return ResponseEntity.status(code.httpStatus()).body(body);
     }
 
@@ -55,11 +55,11 @@ public class GlobalExceptionHandler {
                         (existing, replacement) -> existing
                 ));
 
-        log.error("Ошибка валидации: {}", fields);
+        log.warn("Ошибка валидации: {}", fields);
 
         ValidationErrorResponse body = ValidationErrorResponse.builder()
                 .message(messageSource.getMessage("error.validation", null, locale()))
-                .path(String.format("{%s}%s", request.getMethod(), request.getRequestURI()))
+                .path(String.format("%s %s", request.getMethod(), request.getRequestURI()))
                 .fields(fields)
                 .timestamp(Instant.now())
                 .build();
@@ -72,7 +72,7 @@ public class GlobalExceptionHandler {
 
         ErrorResponse body = ErrorResponse.builder()
                 .message(messageSource.getMessage("error.internal", null, locale()))
-                .path(String.format("{%s}%s", request.getMethod(), request.getRequestURI()))
+                .path(String.format("%s %s", request.getMethod(), request.getRequestURI()))
                 .timestamp(Instant.now())
                 .build();
         return ResponseEntity.internalServerError().body(body);

@@ -1,12 +1,14 @@
 package ru.yandex.practicum.filmorate.exception;
 
+import org.springframework.http.HttpStatus;
+
 public enum ErrorCode {
 
     // FILM
-    FILM_NOT_FOUND("film.notFound", 404),
+    FILM_NOT_FOUND("film.notFound", HttpStatus.NOT_FOUND.value()),
 
     // USER
-    USER_NOT_FOUND("user.notFound", 404);
+    USER_NOT_FOUND("user.notFound", HttpStatus.NOT_FOUND.value());
 
     private final String key;
     private final int httpStatus;

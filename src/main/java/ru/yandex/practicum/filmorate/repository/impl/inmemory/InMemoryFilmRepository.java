@@ -1,14 +1,11 @@
-package ru.yandex.practicum.filmorate.repository.impl;
+package ru.yandex.practicum.filmorate.repository.impl.inmemory;
 
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.repository.AbstractRepository;
-
-import java.util.concurrent.atomic.AtomicInteger;
+import ru.yandex.practicum.filmorate.repository.FilmRepository;
 
 @Component
-public class FilmRepository extends AbstractRepository<Integer, Film> {
-    private final AtomicInteger nextId = new AtomicInteger(1);
+public class InMemoryFilmRepository extends InMemoryAbstractRepository<Integer, Film> implements FilmRepository {
 
     @Override
     public Film save(Film film) {

@@ -7,7 +7,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import ru.yandex.practicum.filmorate.exception.ApiException;
 import ru.yandex.practicum.filmorate.exception.ErrorCode;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.repository.impl.UserRepository;
+import ru.yandex.practicum.filmorate.repository.UserRepository;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -129,6 +129,122 @@ class UserServiceTest {
         List<User> users = userService.getUsers();
 
         assertTrue(users.isEmpty());
+    }
+
+    // -------- FRIENDS --------
+
+    @Test
+    void shouldAddFriend() {
+        User user = userService.saveUser(validUser());
+        User friend = userService.saveUser(validUser());
+
+        userService.addFriend(user.getId(), friend.getId());
+
+        User foundUser = userService.getUser(user.getId());
+        User foundFriend = userService.getUser(friend.getId());
+
+        assertEquals(1, foundUser.getFriends().size());
+        assertTrue(foundUser.getFriends().contains(friend.getId()));
+        assertEquals(1, foundFriend.getFriends().size());
+        assertTrue(foundFriend.getFriends().contains(user.getId()));
+    }
+
+    @Test
+    void shouldRemoveFriend() {
+        User user = userService.saveUser(validUser());
+        User friend = userService.saveUser(validUser());
+        userService.addFriend(user.getId(), friend.getId());
+
+        userService.removeFriend(user.getId(), friend.getId());
+
+        User foundUser = userService.getUser(user.getId());
+        User foundFriend = userService.getUser(friend.getId());
+
+        assertTrue(foundUser.getFriends().isEmpty());
+        assertTrue(foundFriend.getFriends().isEmpty());
+    }
+
+    @Test
+    void shouldBeIdempotentWhenRemovingNonExistentFriend() {
+        User user = userService.saveUser(validUser());
+        User friend = userService.saveUser(validUser());
+
+        userService.removeFriend(user.getId(), friend.getId());
+
+        User foundUser = userService.getUser(user.getId());
+        assertTrue(foundUser.getFriends().isEmpty());
+    }
+
+    @Test
+    void shouldThrowWhenAddFriendUserNotFound() {
+        User friend = userService.saveUser(validUser());
+
+        ApiException ex = assertThrows(
+                ApiException.class,
+                () -> userService.addFriend(999, friend.getId())
+        );
+        assertEquals(ErrorCode.USER_NOT_FOUND, ex.getCode());
+    }
+
+    @Test
+    void shouldThrowWhenAddFriendFriendNotFound() {
+        User user = userService.saveUser(validUser());
+
+        ApiException ex = assertThrows(
+                ApiException.class,
+                () -> userService.addFriend(user.getId(), 999)
+        );
+        assertEquals(ErrorCode.USER_NOT_FOUND, ex.getCode());
+    }
+
+    @Test
+    void shouldReturnUserFriends() {
+        User user = userService.saveUser(validUser());
+        User friend1 = userService.saveUser(validUser());
+        User friend2 = userService.saveUser(validUser());
+        userService.addFriend(user.getId(), friend1.getId());
+        userService.addFriend(user.getId(), friend2.getId());
+
+        List<User> friends = userService.getUserFriends(user.getId());
+
+        assertEquals(2, friends.size());
+        assertTrue(friends.stream().anyMatch(f -> f.getId().equals(friend1.getId())));
+        assertTrue(friends.stream().anyMatch(f -> f.getId().equals(friend2.getId())));
+    }
+
+    @Test
+    void shouldReturnEmptyFriendsList() {
+        User user = userService.saveUser(validUser());
+
+        List<User> friends = userService.getUserFriends(user.getId());
+
+        assertTrue(friends.isEmpty());
+    }
+
+    @Test
+    void shouldReturnCommonFriends() {
+        User user = userService.saveUser(validUser());
+        User other = userService.saveUser(validUser());
+        User commonFriend = userService.saveUser(validUser());
+        User onlyUserFriend = userService.saveUser(validUser());
+        userService.addFriend(user.getId(), commonFriend.getId());
+        userService.addFriend(user.getId(), onlyUserFriend.getId());
+        userService.addFriend(other.getId(), commonFriend.getId());
+
+        List<User> common = userService.getCommonFriends(user.getId(), other.getId());
+
+        assertEquals(1, common.size());
+        assertEquals(commonFriend.getId(), common.get(0).getId());
+    }
+
+    @Test
+    void shouldReturnEmptyCommonFriends() {
+        User user = userService.saveUser(validUser());
+        User other = userService.saveUser(validUser());
+
+        List<User> common = userService.getCommonFriends(user.getId(), other.getId());
+
+        assertTrue(common.isEmpty());
     }
 
     // -------- helper --------
