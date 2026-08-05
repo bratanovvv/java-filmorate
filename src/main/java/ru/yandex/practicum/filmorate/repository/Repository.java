@@ -13,5 +13,7 @@ public interface Repository<K, V> {
 
     V save(V entity);
 
+    V update(V entity);
+
     List<V> findAllByIds(Collection<K> ids);
 }

@@ -1,8 +1,8 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,10 +12,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.entity.dao.User;
+import ru.yandex.practicum.filmorate.entity.dto.UserDto;
+import ru.yandex.practicum.filmorate.entity.dto.validation.ValidationGroups;
+import ru.yandex.practicum.filmorate.entity.mapper.Mapper;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/users")
@@ -23,26 +27,36 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
+    private final Mapper<UserDto, User> userMapper;
 
     @GetMapping("/{id}")
-    public User getUser(@PathVariable int id) {
-        return userService.getUser(id);
+    public UserDto getUser(@PathVariable int id) {
+        User user = userService.getUser(id);
+        return userMapper.toDto(user);
     }
 
     @GetMapping
-    public List<User> getUsers() {
-        return userService.getUsers();
+    public List<UserDto> getUsers() {
+        List<User> users = userService.getUsers();
+        return users.stream()
+                .map(userMapper::toDto)
+                .collect(Collectors.toList());
     }
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
-    public User createUser(@Valid @RequestBody User user) {
-        return userService.saveUser(user);
+    public UserDto createUser(@Validated(ValidationGroups.Create.class) @RequestBody UserDto userDto) {
+        userDto.setId(null);
+        User user = userMapper.toEntity(userDto);
+        User saved = userService.saveUser(user);
+        return userMapper.toDto(saved);
     }
 
     @PutMapping
-    public User updateUser(@Valid @RequestBody User user) {
-        return userService.updateUser(user);
+    public UserDto updateUser(@Validated(ValidationGroups.Update.class) @RequestBody UserDto userDto) {
+        User user = userMapper.toEntity(userDto);
+        User updated = userService.updateUser(user);
+        return userMapper.toDto(updated);
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -58,12 +72,18 @@ public class UserController {
     }
 
     @GetMapping("/{id}/friends")
-    public List<User> getUserFriends(@PathVariable int id) {
-        return userService.getUserFriends(id);
+    public List<UserDto> getUserFriends(@PathVariable int id) {
+        List<User> friends = userService.getUserFriends(id);
+        return friends.stream()
+                .map(userMapper::toDto)
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")
-    public List<User> getCommonFriends(@PathVariable int id, @PathVariable int otherId) {
-        return userService.getCommonFriends(id, otherId);
+    public List<UserDto> getCommonFriends(@PathVariable int id, @PathVariable int otherId) {
+        List<User> commonFriends = userService.getCommonFriends(id, otherId);
+        return commonFriends.stream()
+                .map(userMapper::toDto)
+                .collect(Collectors.toList());
     }
 }

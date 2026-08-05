@@ -5,9 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ApiException;
 import ru.yandex.practicum.filmorate.exception.ErrorCode;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.repository.FilmRepository;
+import ru.yandex.practicum.filmorate.entity.dao.Film;
+import ru.yandex.practicum.filmorate.entity.dao.User;
+import ru.yandex.practicum.filmorate.repository.impl.FilmRepository;
 
 import java.util.Comparator;
 import java.util.List;
@@ -44,10 +44,13 @@ public class FilmService {
         existingFilm.setDescription(film.getDescription());
         existingFilm.setReleaseDate(film.getReleaseDate());
         existingFilm.setDuration(film.getDuration());
+        existingFilm.setMpa(film.getMpa());
+        existingFilm.getGenres().clear();
+        existingFilm.getGenres().addAll(film.getGenres());
 
         log.info("Обновлён фильм: id={}, name={}", existingFilm.getId(), existingFilm.getName());
 
-        return filmRepository.save(existingFilm);
+        return filmRepository.update(existingFilm);
     }
 
     public void addLike(int filmId, int userId) {
@@ -55,7 +58,7 @@ public class FilmService {
         User user = userService.getUser(userId);
 
         film.getLikes().add(userId);
-        filmRepository.save(film);
+        filmRepository.update(film);
 
         log.info("Пользователь id={} поставил лайк фильму id={}", userId, filmId);
     }
@@ -65,7 +68,7 @@ public class FilmService {
         User user = userService.getUser(userId);
 
         film.getLikes().remove(userId);
-        filmRepository.save(film);
+        filmRepository.update(film);
 
         log.info("Пользователь id={} убрал лайк с фильма id={}", userId, filmId);
     }

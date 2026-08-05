@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.constants;
+package ru.yandex.practicum.filmorate.entity.dto.validation;
 
 public final class ValidationKeys {
     private ValidationKeys() {

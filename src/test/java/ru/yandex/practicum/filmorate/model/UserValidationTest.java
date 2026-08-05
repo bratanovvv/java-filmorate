@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.model;
 
 import org.junit.jupiter.api.Test;
+import ru.yandex.practicum.filmorate.entity.dao.User;
 import ru.yandex.practicum.filmorate.model.base.BaseValidationEntityTest;
 
 import java.time.LocalDate;

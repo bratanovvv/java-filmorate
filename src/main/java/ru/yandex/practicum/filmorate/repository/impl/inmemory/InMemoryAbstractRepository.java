@@ -36,6 +36,9 @@ public abstract class InMemoryAbstractRepository<K, V> implements Repository<K, 
     public abstract V save(V t);
 
     @Override
+    public abstract V update(V t);
+
+    @Override
     public List<V> findAllByIds(Collection<K> ids) {
         return ids.stream()
                 .map(repository::get)

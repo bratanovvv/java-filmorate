@@ -1,8 +1,8 @@
-package ru.yandex.practicum.filmorate.model.validation.annotation;
+package ru.yandex.practicum.filmorate.entity.dto.validation.annotation;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
-import ru.yandex.practicum.filmorate.model.validation.validator.MinDateValidator;
+import ru.yandex.practicum.filmorate.entity.dto.validation.validator.MinDateValidator;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
