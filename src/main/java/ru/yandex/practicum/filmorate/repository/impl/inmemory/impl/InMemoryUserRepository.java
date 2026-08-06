@@ -1,11 +1,12 @@
-package ru.yandex.practicum.filmorate.repository.impl.inmemory;
+package ru.yandex.practicum.filmorate.repository.impl.inmemory.impl;
 
 import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.entity.dao.User;
 import ru.yandex.practicum.filmorate.repository.impl.UserRepository;
+import ru.yandex.practicum.filmorate.repository.impl.inmemory.InMemoryAbstractRepository;
 
-@Component
+@Repository
 @Profile("inmemory")
 public class InMemoryUserRepository extends InMemoryAbstractRepository<Integer, User> implements UserRepository {
 

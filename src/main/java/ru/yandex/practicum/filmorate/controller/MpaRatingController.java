@@ -11,7 +11,6 @@ import ru.yandex.practicum.filmorate.entity.mapper.Mapper;
 import ru.yandex.practicum.filmorate.service.MpaRatingService;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/mpa")
@@ -26,7 +25,7 @@ public class MpaRatingController {
         List<MpaRating> ratings = mpaRatingService.getMpaRatings();
         return ratings.stream()
                 .map(mpaRatingMapper::toDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @GetMapping("/{id}")

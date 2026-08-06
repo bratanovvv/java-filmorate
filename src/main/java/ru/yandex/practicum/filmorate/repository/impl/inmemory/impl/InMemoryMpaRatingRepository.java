@@ -1,17 +1,16 @@
-package ru.yandex.practicum.filmorate.repository.impl.inmemory;
+package ru.yandex.practicum.filmorate.repository.impl.inmemory.impl;
 
 import jakarta.annotation.PostConstruct;
 import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.entity.dao.MpaRating;
 import ru.yandex.practicum.filmorate.repository.impl.MpaRatingRepository;
+import ru.yandex.practicum.filmorate.repository.impl.inmemory.InMemoryAbstractRepository;
 
-import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
-@Component
+@Repository
 @Profile("inmemory")
 public class InMemoryMpaRatingRepository extends InMemoryAbstractRepository<Integer, MpaRating> implements MpaRatingRepository {
 
@@ -32,20 +31,10 @@ public class InMemoryMpaRatingRepository extends InMemoryAbstractRepository<Inte
     }
 
     @Override
-    public Optional<MpaRating> getById(Integer id) {
-        return Optional.ofNullable(repository.get(id));
-    }
-
-    @Override
     public List<MpaRating> getAll() {
         return repository.values().stream()
-                .sorted((r1, r2) -> Integer.compare(r1.getId(), r2.getId()))
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public void clear() {
-        repository.clear();
+                .sorted(Comparator.comparing(MpaRating::getId))
+                .toList();
     }
 
     @Override
@@ -58,13 +47,5 @@ public class InMemoryMpaRatingRepository extends InMemoryAbstractRepository<Inte
     public MpaRating update(MpaRating rating) {
         repository.put(rating.getId(), rating);
         return rating;
-    }
-
-    @Override
-    public List<MpaRating> findAllByIds(Collection<Integer> ids) {
-        return ids.stream()
-                .map(repository::get)
-                .filter(r -> r != null)
-                .collect(Collectors.toList());
     }
 }

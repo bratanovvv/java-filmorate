@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 public abstract class InMemoryAbstractRepository<K, V> implements Repository<K, V> {
 
@@ -28,11 +27,6 @@ public abstract class InMemoryAbstractRepository<K, V> implements Repository<K, 
     }
 
     @Override
-    public void clear() {
-        repository.clear();
-    }
-
-    @Override
     public abstract V save(V t);
 
     @Override
@@ -43,6 +37,6 @@ public abstract class InMemoryAbstractRepository<K, V> implements Repository<K, 
         return ids.stream()
                 .map(repository::get)
                 .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+                .toList();
     }
 }

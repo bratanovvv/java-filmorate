@@ -1,15 +1,14 @@
 package ru.yandex.practicum.filmorate.exception.dto;
 
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import java.time.Instant;
 
-
 @Data
 @SuperBuilder
-@RequiredArgsConstructor
+@NoArgsConstructor
 public class ErrorResponse {
     private String path;
     private String message;

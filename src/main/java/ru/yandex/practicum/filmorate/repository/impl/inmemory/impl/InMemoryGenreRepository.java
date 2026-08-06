@@ -1,17 +1,16 @@
-package ru.yandex.practicum.filmorate.repository.impl.inmemory;
+package ru.yandex.practicum.filmorate.repository.impl.inmemory.impl;
 
 import jakarta.annotation.PostConstruct;
 import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.entity.dao.Genre;
 import ru.yandex.practicum.filmorate.repository.impl.GenreRepository;
+import ru.yandex.practicum.filmorate.repository.impl.inmemory.InMemoryAbstractRepository;
 
-import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
-@Component
+@Repository
 @Profile("inmemory")
 public class InMemoryGenreRepository extends InMemoryAbstractRepository<Integer, Genre> implements GenreRepository {
 
@@ -33,20 +32,10 @@ public class InMemoryGenreRepository extends InMemoryAbstractRepository<Integer,
     }
 
     @Override
-    public Optional<Genre> getById(Integer id) {
-        return Optional.ofNullable(repository.get(id));
-    }
-
-    @Override
     public List<Genre> getAll() {
         return repository.values().stream()
-                .sorted((g1, g2) -> Integer.compare(g1.getId(), g2.getId()))
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public void clear() {
-        repository.clear();
+                .sorted(Comparator.comparing(Genre::getId))
+                .toList();
     }
 
     @Override
@@ -59,13 +48,5 @@ public class InMemoryGenreRepository extends InMemoryAbstractRepository<Integer,
     public Genre update(Genre genre) {
         repository.put(genre.getId(), genre);
         return genre;
-    }
-
-    @Override
-    public List<Genre> findAllByIds(Collection<Integer> ids) {
-        return ids.stream()
-                .map(repository::get)
-                .filter(g -> g != null)
-                .collect(Collectors.toList());
     }
 }

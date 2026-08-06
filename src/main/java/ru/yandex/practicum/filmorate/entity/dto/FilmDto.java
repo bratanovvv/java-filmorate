@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.entity.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -15,6 +16,8 @@ import java.util.Set;
 @Data
 public class FilmDto {
 
+    @NotNull(groups = ValidationGroups.Update.class,
+              message = ValidationKeys.FILM_ID_NOT_NULL)
     private Integer id;
 
     @NotBlank(groups = {ValidationGroups.Create.class, ValidationGroups.Update.class},

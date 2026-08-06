@@ -1,13 +1,13 @@
 package ru.yandex.practicum.filmorate.service;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.exception.ApiException;
 import ru.yandex.practicum.filmorate.exception.ErrorCode;
 import ru.yandex.practicum.filmorate.entity.dao.User;
-import ru.yandex.practicum.filmorate.repository.impl.UserRepository;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -18,18 +18,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
+@AutoConfigureTestDatabase
+@Transactional
 class UserServiceTest {
 
     @Autowired
     private UserService userService;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @BeforeEach
-    void setUp() {
-        userRepository.clear();
-    }
 
     // -------- CREATE --------
 
@@ -145,8 +139,7 @@ class UserServiceTest {
 
         assertEquals(1, foundUser.getFriends().size());
         assertTrue(foundUser.getFriends().contains(friend.getId()));
-        assertEquals(1, foundFriend.getFriends().size());
-        assertTrue(foundFriend.getFriends().contains(user.getId()));
+        assertTrue(foundFriend.getFriends().isEmpty());
     }
 
     @Test

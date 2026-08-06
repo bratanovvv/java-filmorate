@@ -9,8 +9,6 @@ public interface Repository<K, V> {
 
     List<V> getAll();
 
-    void clear();
-
     V save(V entity);
 
     V update(V entity);

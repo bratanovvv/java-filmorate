@@ -20,12 +20,13 @@ import ru.yandex.practicum.filmorate.entity.mapper.Mapper;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/films")
 @RequiredArgsConstructor
 public class FilmController {
+
+    private static final String DEFAULT_POPULAR_COUNT = "10";
 
     private final FilmService filmService;
     private final Mapper<FilmDto, Film> filmMapper;
@@ -41,7 +42,7 @@ public class FilmController {
         List<Film> films = filmService.getFilms();
         return films.stream()
                 .map(filmMapper::toDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @ResponseStatus(HttpStatus.CREATED)
@@ -73,10 +74,10 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public List<FilmDto> getPopularFilms(@RequestParam(defaultValue = "10") int count) {
+    public List<FilmDto> getPopularFilms(@RequestParam(defaultValue = DEFAULT_POPULAR_COUNT) int count) {
         List<Film> films = filmService.getPopularFilms(count);
         return films.stream()
                 .map(filmMapper::toDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 }

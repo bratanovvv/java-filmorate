@@ -1,6 +1,6 @@
 package ru.yandex.practicum.filmorate.entity.mapper;
 
-public interface Mapper <F, T> {
+public interface Mapper<F, T> {
 
     T toEntity(F f);
 

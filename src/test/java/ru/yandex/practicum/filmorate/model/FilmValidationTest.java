@@ -1,17 +1,18 @@
 package ru.yandex.practicum.filmorate.model;
 
 import org.junit.jupiter.api.Test;
-import ru.yandex.practicum.filmorate.entity.dao.Film;
+import ru.yandex.practicum.filmorate.entity.dto.FilmDto;
+import ru.yandex.practicum.filmorate.entity.dto.validation.ValidationGroups;
 import ru.yandex.practicum.filmorate.model.base.BaseValidationEntityTest;
 
 import java.time.LocalDate;
 
 
-class FilmValidationTest extends BaseValidationEntityTest<Film> {
+class FilmValidationTest extends BaseValidationEntityTest<FilmDto> {
 
     @Override
-    protected Film createValidEntity() {
-        Film film = new Film();
+    protected FilmDto createValidEntity() {
+        FilmDto film = new FilmDto();
         film.setName("Matrix");
         film.setDescription("Description");
         film.setReleaseDate(LocalDate.of(1999, 3, 31));
@@ -19,15 +20,20 @@ class FilmValidationTest extends BaseValidationEntityTest<Film> {
         return film;
     }
 
+    @Override
+    protected Class<?> getValidationGroup() {
+        return ValidationGroups.Create.class;
+    }
+
     @Test
     void shouldPassValidationForValidFilm() {
-        Film film = createValidEntity();
+        FilmDto film = createValidEntity();
         assertValid(film);
     }
 
     @Test
     void shouldFailWhenNameIsBlank() {
-        Film film = createValidEntity();
+        FilmDto film = createValidEntity();
         film.setName("");
 
         assertViolationOnField(film, "name");
@@ -35,7 +41,7 @@ class FilmValidationTest extends BaseValidationEntityTest<Film> {
 
     @Test
     void shouldFailWhenDescriptionTooLong() {
-        Film film = createValidEntity();
+        FilmDto film = createValidEntity();
         film.setDescription("a".repeat(201));
 
         assertViolationOnField(film, "description");
@@ -43,7 +49,7 @@ class FilmValidationTest extends BaseValidationEntityTest<Film> {
 
     @Test
     void shouldFailWhenReleaseDateInvalid() {
-        Film film = createValidEntity();
+        FilmDto film = createValidEntity();
         film.setReleaseDate(LocalDate.of(1800, 1, 1));
 
         assertViolationOnField(film, "releaseDate");
@@ -51,7 +57,7 @@ class FilmValidationTest extends BaseValidationEntityTest<Film> {
 
     @Test
     void shouldFailWhenDurationNotPositive() {
-        Film film = createValidEntity();
+        FilmDto film = createValidEntity();
         film.setDuration(0);
 
         assertViolationOnField(film, "duration");

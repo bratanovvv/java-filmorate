@@ -1,7 +1,9 @@
 package ru.yandex.practicum.filmorate.exception;
 
+import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
+@Getter
 public enum ErrorCode {
 
     // FILM
@@ -17,6 +19,10 @@ public enum ErrorCode {
     MPA_RATING_NOT_FOUND("mpaRating.notFound", HttpStatus.NOT_FOUND.value()),
 
     // INTERNAL
+    INSERT_FAILED("error.insertFailed", HttpStatus.INTERNAL_SERVER_ERROR.value()),
+
+    UPDATE_FAILED("error.updateFailed", HttpStatus.INTERNAL_SERVER_ERROR.value()),
+
     INTERNAL_SERVER_ERROR("internal.serverError", HttpStatus.INTERNAL_SERVER_ERROR.value());
 
     private final String key;
@@ -25,13 +31,5 @@ public enum ErrorCode {
     ErrorCode(String key, int httpStatus) {
         this.key = key;
         this.httpStatus = httpStatus;
-    }
-
-    public String key() {
-        return key;
-    }
-
-    public int httpStatus() {
-        return httpStatus;
     }
 }

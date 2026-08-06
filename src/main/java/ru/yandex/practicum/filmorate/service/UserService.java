@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.exception.ApiException;
 import ru.yandex.practicum.filmorate.exception.ErrorCode;
 import ru.yandex.practicum.filmorate.entity.dao.User;
@@ -28,6 +29,7 @@ public class UserService {
         return userRepository.getAll();
     }
 
+    @Transactional
     public User saveUser(User user) {
         normalizeUser(user);
 
@@ -38,6 +40,7 @@ public class UserService {
         return saved;
     }
 
+    @Transactional
     public User updateUser(User user) {
         User existingUser = getUser(user.getId());
 
@@ -55,22 +58,24 @@ public class UserService {
         return updated;
     }
 
+@Transactional
     public void addFriend(int userId, int friendId) {
         User user = getUser(userId);
-        getUser(friendId);
+        User friend = getUser(friendId);
 
-        user.getFriends().add(friendId);
+        user.getFriends().add(friend.getId());
 
         userRepository.update(user);
 
         log.info("Пользователь id={} добавил в друзья пользователя id={}", userId, friendId);
     }
 
+    @Transactional
     public void removeFriend(int userId, int friendId) {
         User user = getUser(userId);
-        getUser(friendId);
+        User friend = getUser(friendId);
 
-        user.getFriends().remove(friendId);
+        user.getFriends().remove(friend.getId());
 
         userRepository.update(user);
 

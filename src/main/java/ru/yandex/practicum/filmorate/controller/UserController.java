@@ -19,7 +19,6 @@ import ru.yandex.practicum.filmorate.entity.mapper.Mapper;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/users")
@@ -40,7 +39,7 @@ public class UserController {
         List<User> users = userService.getUsers();
         return users.stream()
                 .map(userMapper::toDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @ResponseStatus(HttpStatus.CREATED)
@@ -76,7 +75,7 @@ public class UserController {
         List<User> friends = userService.getUserFriends(id);
         return friends.stream()
                 .map(userMapper::toDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")
@@ -84,6 +83,6 @@ public class UserController {
         List<User> commonFriends = userService.getCommonFriends(id, otherId);
         return commonFriends.stream()
                 .map(userMapper::toDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 }

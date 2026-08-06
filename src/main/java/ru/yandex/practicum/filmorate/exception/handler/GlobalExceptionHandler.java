@@ -36,13 +36,13 @@ public class GlobalExceptionHandler {
         ErrorCode code = ex.getCode();
 
         ErrorResponse body = ErrorResponse.builder()
-                .message(messageSource.getMessage(code.key(), ex.getArgs(), locale()))
+                .message(messageSource.getMessage(code.getKey(), ex.getArgs(), locale()))
                 .timestamp(Instant.now())
                 .path(String.format("%s %s", request.getMethod(), request.getRequestURI()))
                 .build();
 
         log.warn("Ошибка приложения: {}", body.getMessage());
-        return ResponseEntity.status(code.httpStatus()).body(body);
+        return ResponseEntity.status(code.getHttpStatus()).body(body);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

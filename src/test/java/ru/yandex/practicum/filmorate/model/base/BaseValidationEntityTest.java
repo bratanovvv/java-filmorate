@@ -4,6 +4,7 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
+import jakarta.validation.groups.Default;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 
@@ -52,13 +53,23 @@ public abstract class BaseValidationEntityTest<T> {
     protected abstract T createValidEntity();
 
     /**
+     * Возвращает группу валидации, применяемую при проверке.
+     *
+     * @return класс группы Bean Validation
+     */
+    protected Class<?> getValidationGroup() {
+        return Default.class;
+    }
+
+    /**
      * Выполняет валидацию объекта.
      *
      * @param object объект для проверки
      * @return набор нарушений ограничений
      */
+    @SuppressWarnings("unchecked")
     protected Set<ConstraintViolation<T>> validate(T object) {
-        return validator.validate(object);
+        return validator.validate(object, getValidationGroup());
     }
 
     /**

@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.repository.impl.db;
+package ru.yandex.practicum.filmorate.repository.impl.db.impl;
 
 import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -6,20 +6,16 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.entity.dao.Genre;
 import ru.yandex.practicum.filmorate.repository.impl.GenreRepository;
+import ru.yandex.practicum.filmorate.repository.impl.db.DbAbstractRepository;
+import ru.yandex.practicum.filmorate.repository.impl.db.query.GenreQueries;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Repository
 @Profile("db")
 public class DbGenreRepository extends DbAbstractRepository<Integer, Genre> implements GenreRepository {
-
-    private static final String FIND_ALL = "SELECT * FROM genres ORDER BY id";
-    private static final String FIND_BY_ID = "SELECT * FROM genres WHERE id = ?";
-    private static final String FIND_ALL_BY_IDS_PREFIX = "SELECT * FROM genres WHERE id IN (";
-    private static final String FIND_ALL_BY_IDS_SUFFIX = ")";
 
     public DbGenreRepository(JdbcTemplate jdbc, RowMapper<Genre> rowMapper) {
         super(jdbc, rowMapper);
@@ -27,17 +23,12 @@ public class DbGenreRepository extends DbAbstractRepository<Integer, Genre> impl
 
     @Override
     public Optional<Genre> getById(Integer id) {
-        return findOne(FIND_BY_ID, id);
+        return findOne(GenreQueries.FIND_BY_ID, id);
     }
 
     @Override
     public List<Genre> getAll() {
-        return findMany(FIND_ALL);
-    }
-
-    @Override
-    public void clear() {
-        jdbc.execute("DELETE FROM genres");
+        return findAll(GenreQueries.FIND_ALL);
     }
 
     @Override
@@ -52,6 +43,6 @@ public class DbGenreRepository extends DbAbstractRepository<Integer, Genre> impl
 
     @Override
     public List<Genre> findAllByIds(Collection<Integer> ids) {
-        return findAllByIds(FIND_ALL_BY_IDS_PREFIX, FIND_ALL_BY_IDS_SUFFIX, ids);
+        return findByIds(GenreQueries.FIND_ALL_BY_IDS, ids);
     }
 }

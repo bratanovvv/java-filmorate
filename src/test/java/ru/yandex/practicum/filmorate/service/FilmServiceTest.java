@@ -1,15 +1,14 @@
 package ru.yandex.practicum.filmorate.service;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.exception.ApiException;
 import ru.yandex.practicum.filmorate.exception.ErrorCode;
 import ru.yandex.practicum.filmorate.entity.dao.Film;
 import ru.yandex.practicum.filmorate.entity.dao.User;
-import ru.yandex.practicum.filmorate.repository.impl.FilmRepository;
-import ru.yandex.practicum.filmorate.repository.impl.UserRepository;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -20,6 +19,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
+@AutoConfigureTestDatabase
+@Transactional
 class FilmServiceTest {
 
     @Autowired
@@ -27,18 +28,6 @@ class FilmServiceTest {
 
     @Autowired
     private UserService userService;
-
-    @Autowired
-    private FilmRepository filmRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @BeforeEach
-    void setUp() {
-        filmRepository.clear();
-        userRepository.clear();
-    }
 
     // -------- CREATE --------
 

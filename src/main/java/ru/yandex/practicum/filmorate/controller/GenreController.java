@@ -11,7 +11,6 @@ import ru.yandex.practicum.filmorate.entity.mapper.Mapper;
 import ru.yandex.practicum.filmorate.service.GenreService;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/genres")
@@ -26,7 +25,7 @@ public class GenreController {
         List<Genre> genres = genreService.getGenres();
         return genres.stream()
                 .map(genreMapper::toDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @GetMapping("/{id}")

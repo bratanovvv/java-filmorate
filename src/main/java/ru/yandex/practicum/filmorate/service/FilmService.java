@@ -3,13 +3,13 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.exception.ApiException;
 import ru.yandex.practicum.filmorate.exception.ErrorCode;
 import ru.yandex.practicum.filmorate.entity.dao.Film;
 import ru.yandex.practicum.filmorate.entity.dao.User;
 import ru.yandex.practicum.filmorate.repository.impl.FilmRepository;
 
-import java.util.Comparator;
 import java.util.List;
 
 @Slf4j
@@ -19,6 +19,8 @@ public class FilmService {
 
     private final FilmRepository filmRepository;
     private final UserService userService;
+    private final MpaRatingService mpaRatingService;
+    private final GenreService genreService;
 
     public Film getFilm(int id) {
         return filmRepository.getById(id)
@@ -29,7 +31,9 @@ public class FilmService {
         return filmRepository.getAll();
     }
 
+    @Transactional
     public Film saveFilm(Film film) {
+        validateExistingFilm(film);
         Film saved = filmRepository.save(film);
 
         log.info("Создан фильм: id={}, name={}", saved.getId(), saved.getName());
@@ -37,8 +41,10 @@ public class FilmService {
         return saved;
     }
 
+    @Transactional
     public Film updateFilm(Film film) {
         Film existingFilm = getFilm(film.getId());
+        validateExistingFilm(film);
 
         existingFilm.setName(film.getName());
         existingFilm.setDescription(film.getDescription());
@@ -53,6 +59,7 @@ public class FilmService {
         return filmRepository.update(existingFilm);
     }
 
+    @Transactional
     public void addLike(int filmId, int userId) {
         Film film = getFilm(filmId);
         User user = userService.getUser(userId);
@@ -63,9 +70,10 @@ public class FilmService {
         log.info("Пользователь id={} поставил лайк фильму id={}", userId, filmId);
     }
 
+    @Transactional
     public void removeLike(int filmId, int userId) {
         Film film = getFilm(filmId);
-        User user = userService.getUser(userId);
+        validateExistingUser(userId);
 
         film.getLikes().remove(userId);
         filmRepository.update(film);
@@ -74,9 +82,19 @@ public class FilmService {
     }
 
     public List<Film> getPopularFilms(int count) {
-        return filmRepository.getAll().stream()
-                .sorted(Comparator.comparingInt((Film f) -> f.getLikes().size()).reversed())
-                .limit(count)
-                .toList();
+        return filmRepository.getPopularFilms(count);
+    }
+
+    private void validateExistingFilm(Film film) {
+        if (film.getMpa() != null) {
+            mpaRatingService.getMpaRating(film.getMpa().getId());
+        }
+        for (var genre : film.getGenres()) {
+            genreService.getGenre(genre.getId());
+        }
+    }
+
+    private void validateExistingUser(int userId) {
+        userService.getUser(userId);
     }
 }

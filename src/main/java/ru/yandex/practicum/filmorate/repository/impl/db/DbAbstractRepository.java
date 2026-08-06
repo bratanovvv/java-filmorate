@@ -26,10 +26,10 @@ public abstract class DbAbstractRepository<K, V> implements Repository<K, V> {
 
     protected Optional<V> findOne(String query, Object... params) {
         List<V> result = jdbc.query(query, rowMapper, params);
-        return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
+        return result.isEmpty() ? Optional.empty() : Optional.of(result.getFirst());
     }
 
-    protected List<V> findMany(String query, Object... params) {
+    protected List<V> findAll(String query, Object... params) {
         return jdbc.query(query, rowMapper, params);
     }
 
@@ -47,28 +47,33 @@ public abstract class DbAbstractRepository<K, V> implements Repository<K, V> {
         if (id != null) {
             return id;
         } else {
-            throw new ApiException(ErrorCode.INTERNAL_SERVER_ERROR, "Не удалось сохранить данные");
+            throw new ApiException(ErrorCode.INSERT_FAILED);
         }
     }
 
     protected void executeUpdate(String query, Object... params) {
         int rowsUpdated = jdbc.update(query, params);
         if (rowsUpdated == 0) {
-            throw new ApiException(ErrorCode.INTERNAL_SERVER_ERROR, "Не удалось обновить данные");
+            throw new ApiException(ErrorCode.UPDATE_FAILED);
         }
     }
 
-    protected boolean delete(String query, Object... params) {
-        int rowsDeleted = jdbc.update(query, params);
-        return rowsDeleted > 0;
-    }
-
-    protected List<V> findAllByIds(String prefix, String suffix, Collection<K> ids) {
+    protected List<V> findByIds(String queryTemplate, Collection<K> ids) {
         if (ids.isEmpty()) {
             return List.of();
         }
         String placeholders = ids.stream().map(id -> "?").collect(Collectors.joining(","));
-        String query = prefix + placeholders + suffix;
-        return findMany(query, ids.toArray());
+        String query = queryTemplate.formatted(placeholders);
+        return findAll(query, ids.toArray());
+    }
+
+    protected void saveRelation(Integer ownerId, Collection<Integer> relatedIds, String mergeQuery) {
+        if (relatedIds.isEmpty()) {
+            return;
+        }
+        List<Object[]> args = relatedIds.stream()
+                .map(rid -> new Object[]{ownerId, rid})
+                .toList();
+        jdbc.batchUpdate(mergeQuery, args);
     }
 }
