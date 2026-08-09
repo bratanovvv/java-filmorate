@@ -1,8 +1,8 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,7 +13,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.entity.dao.Film;
+import ru.yandex.practicum.filmorate.entity.dto.FilmDto;
+import ru.yandex.practicum.filmorate.entity.dto.validation.ValidationGroups;
+import ru.yandex.practicum.filmorate.entity.mapper.Mapper;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.util.List;
@@ -23,27 +26,39 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FilmController {
 
+    private static final String DEFAULT_POPULAR_COUNT = "10";
+
     private final FilmService filmService;
+    private final Mapper<FilmDto, Film> filmMapper;
 
     @GetMapping("/{id}")
-    public Film getFilm(@PathVariable int id) {
-        return filmService.getFilm(id);
+    public FilmDto getFilm(@PathVariable int id) {
+        Film film = filmService.getFilm(id);
+        return filmMapper.toDto(film);
     }
 
     @GetMapping
-    public List<Film> getFilms() {
-        return filmService.getFilms();
+    public List<FilmDto> getFilms() {
+        List<Film> films = filmService.getFilms();
+        return films.stream()
+                .map(filmMapper::toDto)
+                .toList();
     }
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
-    public Film createFilm(@Valid @RequestBody Film film) {
-        return filmService.saveFilm(film);
+    public FilmDto createFilm(@Validated(ValidationGroups.Create.class) @RequestBody FilmDto filmDto) {
+        filmDto.setId(null);
+        Film film = filmMapper.toEntity(filmDto);
+        Film saved = filmService.saveFilm(film);
+        return filmMapper.toDto(saved);
     }
 
     @PutMapping
-    public Film updateFilm(@Valid @RequestBody Film film) {
-        return filmService.updateFilm(film);
+    public FilmDto updateFilm(@Validated(ValidationGroups.Update.class) @RequestBody FilmDto filmDto) {
+        Film film = filmMapper.toEntity(filmDto);
+        Film updated = filmService.updateFilm(film);
+        return filmMapper.toDto(updated);
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -59,7 +74,10 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public List<Film> getPopularFilms(@RequestParam(defaultValue = "10") int count) {
-        return filmService.getPopularFilms(count);
+    public List<FilmDto> getPopularFilms(@RequestParam(defaultValue = DEFAULT_POPULAR_COUNT) int count) {
+        List<Film> films = filmService.getPopularFilms(count);
+        return films.stream()
+                .map(filmMapper::toDto)
+                .toList();
     }
 }

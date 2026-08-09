@@ -3,10 +3,11 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.exception.ApiException;
 import ru.yandex.practicum.filmorate.exception.ErrorCode;
-import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.repository.UserRepository;
+import ru.yandex.practicum.filmorate.entity.dao.User;
+import ru.yandex.practicum.filmorate.repository.impl.UserRepository;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,6 +29,7 @@ public class UserService {
         return userRepository.getAll();
     }
 
+    @Transactional
     public User saveUser(User user) {
         normalizeUser(user);
 
@@ -38,6 +40,7 @@ public class UserService {
         return saved;
     }
 
+    @Transactional
     public User updateUser(User user) {
         User existingUser = getUser(user.getId());
 
@@ -48,37 +51,35 @@ public class UserService {
         existingUser.setName(user.getName());
         existingUser.setBirthday(user.getBirthday());
 
-        User updated = userRepository.save(existingUser);
+        User updated = userRepository.update(existingUser);
 
         log.info("Обновлён пользователь: id={}, login={}", updated.getId(), updated.getLogin());
 
         return updated;
     }
 
+@Transactional
     public void addFriend(int userId, int friendId) {
         User user = getUser(userId);
         User friend = getUser(friendId);
 
-        user.getFriends().add(friendId);
-        friend.getFriends().add(userId);
+        user.getFriends().add(friend.getId());
 
-        userRepository.save(user);
-        userRepository.save(friend);
+        userRepository.update(user);
 
-        log.info("Пользователи id={} и id={} теперь друзья", userId, friendId);
+        log.info("Пользователь id={} добавил в друзья пользователя id={}", userId, friendId);
     }
 
+    @Transactional
     public void removeFriend(int userId, int friendId) {
         User user = getUser(userId);
         User friend = getUser(friendId);
 
-        user.getFriends().remove(friendId);
-        friend.getFriends().remove(userId);
+        user.getFriends().remove(friend.getId());
 
-        userRepository.save(user);
-        userRepository.save(friend);
+        userRepository.update(user);
 
-        log.info("Пользователи id={} и id={} больше не друзья", userId, friendId);
+        log.info("Пользователь id={} удалил из друзей пользователя id={}", userId, friendId);
     }
 
     public List<User> getUserFriends(int userId) {

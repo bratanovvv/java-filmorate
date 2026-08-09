@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 public abstract class InMemoryAbstractRepository<K, V> implements Repository<K, V> {
 
@@ -28,18 +27,16 @@ public abstract class InMemoryAbstractRepository<K, V> implements Repository<K, 
     }
 
     @Override
-    public void clear() {
-        repository.clear();
-    }
+    public abstract V save(V t);
 
     @Override
-    public abstract V save(V t);
+    public abstract V update(V t);
 
     @Override
     public List<V> findAllByIds(Collection<K> ids) {
         return ids.stream()
                 .map(repository::get)
                 .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+                .toList();
     }
 }

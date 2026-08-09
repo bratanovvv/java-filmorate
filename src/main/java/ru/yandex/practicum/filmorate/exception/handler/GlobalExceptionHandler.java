@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.exception;
+package ru.yandex.practicum.filmorate.exception.handler;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +10,8 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import ru.yandex.practicum.filmorate.exception.ApiException;
+import ru.yandex.practicum.filmorate.exception.ErrorCode;
 import ru.yandex.practicum.filmorate.exception.dto.ErrorResponse;
 import ru.yandex.practicum.filmorate.exception.dto.ValidationErrorResponse;
 
@@ -34,13 +36,13 @@ public class GlobalExceptionHandler {
         ErrorCode code = ex.getCode();
 
         ErrorResponse body = ErrorResponse.builder()
-                .message(messageSource.getMessage(code.key(), ex.getArgs(), locale()))
+                .message(messageSource.getMessage(code.getKey(), ex.getArgs(), locale()))
                 .timestamp(Instant.now())
                 .path(String.format("%s %s", request.getMethod(), request.getRequestURI()))
                 .build();
 
         log.warn("Ошибка приложения: {}", body.getMessage());
-        return ResponseEntity.status(code.httpStatus()).body(body);
+        return ResponseEntity.status(code.getHttpStatus()).body(body);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
