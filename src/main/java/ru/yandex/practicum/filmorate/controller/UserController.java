@@ -85,4 +85,10 @@ public class UserController {
                 .map(userMapper::toDto)
                 .toList();
     }
+
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping("/{id}")
+    public void deleteUser(@PathVariable int id) {
+        userService.deleteUser(id);
+    }
 }

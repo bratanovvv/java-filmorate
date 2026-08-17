@@ -32,4 +32,6 @@ public final class UserQueries {
             MERGE INTO friendships (user_id, friend_id, status_id) KEY(user_id, friend_id)
             VALUES (?, ?, 1)
             """;
+
+    public static final String DELETE_USER = "DELETE FROM users WHERE id = ?";
 }

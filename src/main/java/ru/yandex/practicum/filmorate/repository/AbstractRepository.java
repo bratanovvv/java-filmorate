@@ -23,15 +23,26 @@ public abstract class AbstractRepository<K, V> implements Repository<K, V> {
         this.rowMapper = rowMapper;
     }
 
+    /**
+     * Выполняет запрос и возвращает первую строку как {@code Optional};
+     * пустой, если строк нет.
+     */
     protected Optional<V> findOne(String query, Object... params) {
         List<V> result = jdbc.query(query, rowMapper, params);
         return result.isEmpty() ? Optional.empty() : Optional.of(result.getFirst());
     }
 
+    /**
+     * Выполняет запрос и возвращает все отображённые строки.
+     */
     protected List<V> findAll(String query, Object... params) {
         return jdbc.query(query, rowMapper, params);
     }
 
+    /**
+     * Выполняет INSERT с {@code RETURN_GENERATED_KEYS} и возвращает новый id;
+     * бросает {@code ApiException(INSERT_FAILED)}, если ключ не сгенерирован.
+     */
     protected int insert(String query, Object... params) {
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         jdbc.update(connection -> {
@@ -50,6 +61,10 @@ public abstract class AbstractRepository<K, V> implements Repository<K, V> {
         }
     }
 
+    /**
+     * Выполняет UPDATE;
+     * бросает {@code ApiException(UPDATE_FAILED)}, если затронуто 0 строк.
+     */
     protected void executeUpdate(String query, Object... params) {
         int rowsUpdated = jdbc.update(query, params);
         if (rowsUpdated == 0) {
@@ -57,6 +72,10 @@ public abstract class AbstractRepository<K, V> implements Repository<K, V> {
         }
     }
 
+    /**
+     * Подставляет динамический список плейсхолдеров {@code IN (?,?,…)} в шаблон и выполняет
+     * {@code findAll}; возвращает {@code List.of()} для пустого {@code ids}.
+     */
     protected List<V> findByIds(String queryTemplate, Collection<K> ids) {
         if (ids.isEmpty()) {
             return List.of();
@@ -66,6 +85,10 @@ public abstract class AbstractRepository<K, V> implements Repository<K, V> {
         return findAll(query, ids.toArray());
     }
 
+    /**
+     * Батч-upsert пар {@code (ownerId, relatedId)} через MERGE-запрос;
+     * no-op при пустом {@code relatedIds}.
+     */
     protected void saveRelation(Integer ownerId, Collection<Integer> relatedIds, String mergeQuery) {
         if (relatedIds.isEmpty()) {
             return;
@@ -74,5 +97,16 @@ public abstract class AbstractRepository<K, V> implements Repository<K, V> {
                 .map(rid -> new Object[]{ownerId, rid})
                 .toList();
         jdbc.batchUpdate(mergeQuery, args);
+    }
+
+    /**
+     * Выполняет DELETE;
+     * бросает {@code ApiException(DELETE_FAILED)}, если удалено 0 строк.
+     */
+    protected void deleteById(String query, Object... params) {
+        int rowsDeleted = jdbc.update(query, params);
+        if (rowsDeleted == 0) {
+            throw new ApiException(ErrorCode.DELETE_FAILED);
+        }
     }
 }

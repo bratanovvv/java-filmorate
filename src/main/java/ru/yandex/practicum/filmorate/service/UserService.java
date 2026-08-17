@@ -99,6 +99,11 @@ public class UserService {
                 ));
     }
 
+    public void deleteUser(int id) {
+        User user = getUser(id);
+        userRepository.delete(user.getId());
+    }
+
     private void normalizeUser(User user) {
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());

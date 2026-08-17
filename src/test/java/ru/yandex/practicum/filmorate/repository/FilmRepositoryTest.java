@@ -158,6 +158,16 @@ class FilmRepositoryTest {
                         assertThat(f.getLikes()).contains(user.getId()));
     }
 
+    @Test
+    void shouldDeleteFilm() {
+        Film saved = filmRepository.save(validFilm());
+
+        filmRepository.delete(saved.getId());
+
+        Optional<Film> loaded = filmRepository.getById(saved.getId());
+        assertThat(loaded).isEmpty();
+    }
+
     private Film validFilm() {
         Film film = new Film();
         film.setName("Matrix");
