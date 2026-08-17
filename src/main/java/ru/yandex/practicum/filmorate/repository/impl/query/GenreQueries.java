@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.repository.impl.db.query;
+package ru.yandex.practicum.filmorate.repository.impl.query;
 
 public final class GenreQueries {
 
