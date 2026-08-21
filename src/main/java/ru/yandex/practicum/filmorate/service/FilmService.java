@@ -81,8 +81,22 @@ public class FilmService {
         log.info("Пользователь id={} убрал лайк с фильма id={}", userId, filmId);
     }
 
-    public List<Film> getPopularFilms(int count) {
-        return filmRepository.getPopularFilms(count);
+    public List<Film> popular(int count, Long genreId, Integer year) {
+        log.info("Getting popular films: count={}, genreId={}, year={}", count, genreId, year);
+
+        List<Film> films;
+        if (genreId != null && year != null) {
+            films = filmRepository.findPopularByGenreAndYear(count, genreId, year);
+        } else if (genreId != null) {
+            films = filmRepository.findPopularByGenre(count, genreId);
+        } else if (year != null) {
+            films = filmRepository.findPopularByYear(count, year);
+        } else {
+            films = filmRepository.getPopularFilms(count);
+        }
+
+        log.info("Found {} films", films.size());
+        return films;
     }
 
     private void validateExistingFilm(Film film) {
