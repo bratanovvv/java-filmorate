@@ -59,13 +59,13 @@ public final class FilmQueries {
 
     public static final String FIND_POPULAR_BY_GENRE_AND_YEAR = """
             SELECT DISTINCT
-                f.id, 
-                f.name, 
-                f.description, 
-                f.release_date, 
-                f.duration, 
-                f.mpa_rating_id, 
-                m.name AS mpa_name, 
+                f.id,
+                f.name,
+                f.description,
+                f.release_date,
+                f.duration,
+                f.mpa_rating_id,
+                m.name AS mpa_name,
                 COUNT(l.user_id) AS likes_count
             FROM films f
             LEFT JOIN mpa_ratings m ON f.mpa_rating_id = m.id
@@ -80,13 +80,13 @@ public final class FilmQueries {
 
 public static final String FIND_POPULAR_BY_GENRE = """
             SELECT DISTINCT
-                f.id, 
-                f.name, 
-                f.description, 
-                f.release_date, 
-                f.duration, 
-                f.mpa_rating_id, 
-                m.name AS mpa_name, 
+                f.id,
+                f.name,
+                f.description,
+                f.release_date,
+                f.duration,
+                f.mpa_rating_id,
+                m.name AS mpa_name,
                 COUNT(l.user_id) AS likes_count
             FROM films f
             LEFT JOIN mpa_ratings m ON f.mpa_rating_id = m.id
@@ -100,13 +100,13 @@ public static final String FIND_POPULAR_BY_GENRE = """
 
     public static final String FIND_POPULAR_BY_YEAR = """
             SELECT DISTINCT
-                f.id, 
-                f.name, 
-                f.description, 
-                f.release_date, 
-                f.duration, 
-                f.mpa_rating_id, 
-                m.name AS mpa_name, 
+                f.id,
+                f.name,
+                f.description,
+                f.release_date,
+                f.duration,
+                f.mpa_rating_id,
+                m.name AS mpa_name,
                 COUNT(l.user_id) AS likes_count
             FROM films f
             LEFT JOIN mpa_ratings m ON f.mpa_rating_id = m.id
