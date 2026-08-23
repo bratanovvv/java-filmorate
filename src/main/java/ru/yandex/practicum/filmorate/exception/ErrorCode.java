@@ -25,7 +25,11 @@ public enum ErrorCode {
 
     DELETE_FAILED("error.deleteFailed", HttpStatus.INTERNAL_SERVER_ERROR.value()),
 
-    INTERNAL_SERVER_ERROR("internal.serverError", HttpStatus.INTERNAL_SERVER_ERROR.value());
+    INTERNAL_SERVER_ERROR("internal.serverError", HttpStatus.INTERNAL_SERVER_ERROR.value()),
+
+    // REVIEW
+    REVIEW_NOT_FOUND("review.notFound", HttpStatus.NOT_FOUND.value());
+
 
     private final String key;
     private final int httpStatus;
