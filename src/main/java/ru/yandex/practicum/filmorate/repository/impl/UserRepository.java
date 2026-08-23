@@ -72,7 +72,11 @@ public class UserRepository extends AbstractRepository<Integer, User> {
 
     @Override
     public void delete(Integer id) {
-        deleteById(UserQueries.DELETE_USER, id);
+        deleteById(UserQueries.DELETE, id);
+    }
+
+    public boolean existsById(Integer id) {
+        return exists(UserQueries.EXISTS_BY_ID, id);
     }
 
     private void loadFriendsForUsers(List<User> users) {

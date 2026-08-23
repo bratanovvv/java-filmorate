@@ -34,7 +34,6 @@ public class UserService {
         normalizeUser(user);
 
         User saved = userRepository.save(user);
-
         log.info("Создан пользователь: id={}, login={}", saved.getId(), saved.getLogin());
 
         return saved;
@@ -61,9 +60,9 @@ public class UserService {
 @Transactional
     public void addFriend(int userId, int friendId) {
         User user = getUser(userId);
-        User friend = getUser(friendId);
+        checkUserExists(friendId);
 
-        user.getFriends().add(friend.getId());
+        user.getFriends().add(friendId);
 
         userRepository.update(user);
 
@@ -99,9 +98,16 @@ public class UserService {
                 ));
     }
 
-    public void deleteUser(int id) {
-        User user = getUser(id);
-        userRepository.delete(user.getId());
+    public void deleteUser(int userId) {
+        checkUserExists(userId);
+        userRepository.delete(userId);
+        log.info("Удален пользователь: id={}", userId);
+    }
+
+    public void checkUserExists(int userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new ApiException(ErrorCode.USER_NOT_FOUND, userId);
+        }
     }
 
     private void normalizeUser(User user) {
