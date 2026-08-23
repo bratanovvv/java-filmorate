@@ -9,9 +9,11 @@ public interface Repository<K, V> {
 
     List<V> getAll();
 
+    List<V> findAllByIds(Collection<K> ids);
+
     V save(V entity);
 
     V update(V entity);
 
-    List<V> findAllByIds(Collection<K> ids);
+    void delete(K id);
 }

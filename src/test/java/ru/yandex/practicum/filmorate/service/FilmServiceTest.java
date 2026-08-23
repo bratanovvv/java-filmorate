@@ -241,6 +241,30 @@ class FilmServiceTest {
         assertTrue(popular.isEmpty());
     }
 
+    // -------- DELETE --------
+
+    @Test
+    void shouldDeleteFilm() {
+        Film saved = filmService.saveFilm(validFilm());
+
+        filmService.deleteFilm(saved.getId());
+
+        ApiException ex = assertThrows(
+                ApiException.class,
+                () -> filmService.getFilm(saved.getId())
+        );
+        assertEquals(ErrorCode.FILM_NOT_FOUND, ex.getCode());
+    }
+
+    @Test
+    void shouldThrowWhenDeleteUnknownFilm() {
+        ApiException ex = assertThrows(
+                ApiException.class,
+                () -> filmService.deleteFilm(999)
+        );
+        assertEquals(ErrorCode.FILM_NOT_FOUND, ex.getCode());
+    }
+
     // -------- helper --------
 
     private Film validFilm() {

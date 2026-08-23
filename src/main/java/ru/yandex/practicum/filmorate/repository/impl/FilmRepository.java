@@ -80,6 +80,11 @@ public class FilmRepository extends AbstractRepository<Integer, Film> {
         return films;
     }
 
+    @Override
+    public void delete(Integer id) {
+        deleteById(FilmQueries.DELETE_FILM, id);
+    }
+
     public List<Film> getPopularFilms(int count) {
         List<Film> films = findAll(FilmQueries.FIND_POPULAR, count);
         loadGenresForFilms(films);

@@ -80,4 +80,10 @@ public class FilmController {
                 .map(filmMapper::toDto)
                 .toList();
     }
+
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping("/{id}")
+    public void deleteFilm(@PathVariable int id) {
+        filmService.deleteFilm(id);
+    }
 }

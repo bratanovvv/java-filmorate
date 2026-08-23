@@ -105,6 +105,16 @@ class UserRepositoryTest {
                 .containsExactlyInAnyOrder(user1.getId(), user2.getId());
     }
 
+    @Test
+    void shouldDeleteUser() {
+        User saved = userRepository.save(validUser());
+
+        userRepository.delete(saved.getId());
+
+        Optional<User> loaded = userRepository.getById(saved.getId());
+        assertThat(loaded).isEmpty();
+    }
+
     private User validUser() {
         User user = new User();
         user.setEmail("test@mail.com");

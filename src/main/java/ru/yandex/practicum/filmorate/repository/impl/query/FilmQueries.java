@@ -56,4 +56,6 @@ public final class FilmQueries {
             MERGE INTO likes (film_id, user_id) KEY(film_id, user_id)
             VALUES (?, ?)
             """;
+
+    public static final String DELETE_FILM = "DELETE FROM films WHERE id = ?";
 }

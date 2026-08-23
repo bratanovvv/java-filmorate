@@ -30,16 +30,21 @@ public class MpaRatingRepository extends AbstractRepository<Integer, MpaRating> 
 
     @Override
     public MpaRating save(MpaRating rating) {
-        return rating;
+        throw new UnsupportedOperationException("Repository is read-only");
     }
 
     @Override
     public MpaRating update(MpaRating rating) {
-        return rating;
+        throw new UnsupportedOperationException("Repository is read-only");
     }
 
     @Override
     public List<MpaRating> findAllByIds(Collection<Integer> ids) {
         return findByIds(MpaRatingQueries.FIND_ALL_BY_IDS, ids);
+    }
+
+    @Override
+    public void delete(Integer id) {
+        throw new UnsupportedOperationException("Repository is read-only");
     }
 }
