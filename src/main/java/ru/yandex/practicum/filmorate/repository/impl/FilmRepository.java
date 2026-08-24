@@ -9,10 +9,8 @@ import ru.yandex.practicum.filmorate.entity.dao.Genre;
 import ru.yandex.practicum.filmorate.entity.dao.util.FilmSortOption;
 import ru.yandex.practicum.filmorate.repository.AbstractRepository;
 import ru.yandex.practicum.filmorate.repository.impl.query.FilmQueries;
-import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.sql.Date;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -28,14 +26,9 @@ public class FilmRepository extends AbstractRepository<Integer, Film> {
 
     @Override
     public Optional<Film> getById(Integer id) {
-        List<Film> films = findAll(FilmQueries.FIND_BY_ID, id);
-        if (films.isEmpty()) {
-            return Optional.empty();
-        }
-        Film film = films.getFirst();
-
-        loadFilmsLinkedEntities(List.of(film));
-        return Optional.of(film);
+        Optional<Film> filmOpt = findOne(FilmQueries.FIND_BY_ID, id);
+        filmOpt.ifPresent(f -> loadFilmsLinkedEntities(List.of(f)));
+        return filmOpt;
     }
 
     @Override
@@ -106,8 +99,7 @@ public class FilmRepository extends AbstractRepository<Integer, Film> {
     }
 
     public List<Film> getFilmsByDirector(Integer directorId, FilmSortOption sortBy) {
-        List<Film> films;
-        films = switch (sortBy) {
+        List<Film> films = switch (sortBy) {
             case year -> findAll(FilmQueries.FIND_BY_DIRECTOR_ORDER_BY_YEAR, directorId);
             case likes -> findAll(FilmQueries.FIND_BY_DIRECTOR_ORDER_BY_LIKES, directorId);
         };

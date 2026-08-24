@@ -57,7 +57,7 @@ public class UserService {
         return updated;
     }
 
-@Transactional
+    @Transactional
     public void addFriend(int userId, int friendId) {
         User user = getUser(userId);
         checkUserExists(friendId);
@@ -72,12 +72,11 @@ public class UserService {
     @Transactional
     public void removeFriend(int userId, int friendId) {
         User user = getUser(userId);
-        User friend = getUser(friendId);
+        checkUserExists(friendId);
 
-        user.getFriends().remove(friend.getId());
+        user.getFriends().remove(friendId);
 
         userRepository.update(user);
-
         log.info("Пользователь id={} удалил из друзей пользователя id={}", userId, friendId);
     }
 

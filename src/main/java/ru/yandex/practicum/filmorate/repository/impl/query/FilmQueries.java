@@ -91,7 +91,7 @@ public final class FilmQueries {
             LEFT JOIN mpa_ratings m ON f.mpa_rating_id = m.id
             LEFT JOIN film_directors fd ON f.id = fd.film_id
             WHERE fd.director_id = ?
-            ORDER BY f.release_date ASC, f.id ASC;
+            ORDER BY f.release_date ASC, f.id ASC
             """;
 
     public static final String FIND_BY_DIRECTOR_ORDER_BY_LIKES = """

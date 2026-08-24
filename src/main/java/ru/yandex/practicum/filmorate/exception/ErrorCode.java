@@ -29,8 +29,6 @@ public enum ErrorCode {
 
     INTERNAL_SERVER_ERROR("internal.serverError", HttpStatus.INTERNAL_SERVER_ERROR.value());
 
-
-
     private final String key;
     private final int httpStatus;
 

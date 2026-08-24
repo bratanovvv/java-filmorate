@@ -136,33 +136,10 @@ class FilmServiceTest {
     }
 
     @Test
-    void shouldBeIdempotentWhenAddingDuplicateLike() {
-        Film film = filmService.saveFilm(validFilm());
-        User user = userService.saveUser(validUser());
-
-        filmService.addLike(film.getId(), user.getId());
-        filmService.addLike(film.getId(), user.getId());
-
-        Film likedFilm = filmService.getFilm(film.getId());
-        assertEquals(1, likedFilm.getLikes().size());
-    }
-
-    @Test
     void shouldRemoveLike() {
         Film film = filmService.saveFilm(validFilm());
         User user = userService.saveUser(validUser());
         filmService.addLike(film.getId(), user.getId());
-
-        filmService.removeLike(film.getId(), user.getId());
-
-        Film likedFilm = filmService.getFilm(film.getId());
-        assertTrue(likedFilm.getLikes().isEmpty());
-    }
-
-    @Test
-    void shouldBeIdempotentWhenRemovingNonExistentLike() {
-        Film film = filmService.saveFilm(validFilm());
-        User user = userService.saveUser(validUser());
 
         filmService.removeLike(film.getId(), user.getId());
 

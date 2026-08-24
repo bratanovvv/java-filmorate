@@ -47,6 +47,7 @@ public class DirectorService {
         return updated;
     }
 
+    @Transactional
     public void deleteDirector(int id) {
         Director director = getDirector(id);
         directorRepository.delete(director.getId());
