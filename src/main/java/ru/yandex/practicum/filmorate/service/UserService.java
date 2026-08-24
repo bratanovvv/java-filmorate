@@ -58,7 +58,7 @@ public class UserService {
         return updated;
     }
 
-@Transactional
+    @Transactional
     public void addFriend(int userId, int friendId) {
         User user = getUser(userId);
         User friend = getUser(friendId);
