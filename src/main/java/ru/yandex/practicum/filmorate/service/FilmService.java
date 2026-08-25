@@ -82,20 +82,11 @@ public class FilmService {
     }
 
     public List<Film> popular(int count, Long genreId, Integer year) {
-        log.info("Getting popular films: count={}, genreId={}, year={}", count, genreId, year);
+        log.info("Запрос популярных фильмов: count={}, genreId={}, year={}", count, genreId, year);
 
         List<Film> films;
-        if (genreId != null && year != null) {
-            films = filmRepository.findPopularByGenreAndYear(count, genreId, year);
-        } else if (genreId != null) {
-            films = filmRepository.findPopularByGenre(count, genreId);
-        } else if (year != null) {
-            films = filmRepository.findPopularByYear(count, year);
-        } else {
-            films = filmRepository.getPopularFilms(count);
-        }
+        films = filmRepository.findPopularByGenreAndYear(count, genreId, year);
 
-        log.info("Found {} films", films.size());
         return films;
     }
 

@@ -58,63 +58,29 @@ public final class FilmQueries {
             """;
 
     public static final String FIND_POPULAR_BY_GENRE_AND_YEAR = """
-            SELECT DISTINCT
-                f.id,
-                f.name,
-                f.description,
-                f.release_date,
-                f.duration,
-                f.mpa_rating_id,
-                m.name AS mpa_name,
-                COUNT(l.user_id) AS likes_count
-            FROM films f
-            LEFT JOIN mpa_ratings m ON f.mpa_rating_id = m.id
-            LEFT JOIN likes l ON f.id = l.film_id
-            LEFT JOIN film_genres fg ON f.id = fg.film_id
-            WHERE (? IS NULL OR fg.genre_id = ?)
-                AND (? IS NULL OR EXTRACT(YEAR FROM f.release_date) = ?)
-            GROUP BY f.id, m.name
-            ORDER BY likes_count DESC, f.id
-            LIMIT ?
-            """;
-
-public static final String FIND_POPULAR_BY_GENRE = """
-            SELECT DISTINCT
-                f.id,
-                f.name,
-                f.description,
-                f.release_date,
-                f.duration,
-                f.mpa_rating_id,
-                m.name AS mpa_name,
-                COUNT(l.user_id) AS likes_count
-            FROM films f
-            LEFT JOIN mpa_ratings m ON f.mpa_rating_id = m.id
-            LEFT JOIN likes l ON f.id = l.film_id
-            LEFT JOIN film_genres fg ON f.id = fg.film_id
-            WHERE (? IS NULL OR fg.genre_id = ?)
-            GROUP BY f.id, m.name
-            ORDER BY likes_count DESC, f.id
-            LIMIT ?
-            """;
-
-    public static final String FIND_POPULAR_BY_YEAR = """
-            SELECT DISTINCT
-                f.id,
-                f.name,
-                f.description,
-                f.release_date,
-                f.duration,
-                f.mpa_rating_id,
-                m.name AS mpa_name,
-                COUNT(l.user_id) AS likes_count
-            FROM films f
-            LEFT JOIN mpa_ratings m ON f.mpa_rating_id = m.id
-            LEFT JOIN likes l ON f.id = l.film_id
-            LEFT JOIN film_genres fg ON f.id = fg.film_id
-            WHERE (? IS NULL OR EXTRACT(YEAR FROM f.release_date) = ?)
-            GROUP BY f.id, m.name
-            ORDER BY likes_count DESC, f.id
-            LIMIT ?
-            """;
+        SELECT
+            f.id,
+            f.name,
+            f.description,
+            f.release_date,
+            f.duration,
+            f.mpa_rating_id,
+            m.name AS mpa_name,
+            COUNT(l.user_id) AS likes_count
+        FROM films f
+        LEFT JOIN mpa_ratings m ON f.mpa_rating_id = m.id
+        LEFT JOIN likes l ON f.id = l.film_id
+        WHERE (? IS NULL
+            OR EXISTS (
+                SELECT 1
+                FROM film_genres fg
+                WHERE fg.film_id = f.id
+                AND fg.genre_id = ?
+            ))
+            AND (? IS NULL
+                OR EXTRACT(YEAR FROM f.release_date) = ?)
+        GROUP BY f.id, m.name
+        ORDER BY likes_count DESC, f.id
+        LIMIT ?
+        """;
 }
