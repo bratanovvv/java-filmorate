@@ -90,6 +90,16 @@ public class FilmService {
         filmRepository.delete(film.getId());
     }
 
+    public List<Film> getCommonFilms(int userId, int friendId) {
+        userService.getUser(userId);
+        userService.getUser(friendId);
+
+        log.info("Поиск общих фильмов для пользователей: userId={}, friendId={}", userId, friendId);
+        List<Film> films = filmRepository.getCommonFilms(userId, friendId);
+        log.info("Найдено общих фильмов: {}", films.size());
+        return films;
+    }
+
     private void validateExistingFilm(Film film) {
         if (film.getMpa() != null) {
             mpaRatingService.getMpaRating(film.getMpa().getId());

@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -283,5 +284,59 @@ class FilmServiceTest {
         user.setName("Test User");
         user.setBirthday(LocalDate.of(2000, 1, 1));
         return user;
+    }
+
+    @Test
+    void shouldReturnCommonFilms() {
+        // Создаём пользователей
+        User user1 = userService.saveUser(validUser());
+        User user2 = userService.saveUser(validUser());
+        User user3 = userService.saveUser(validUser());
+
+        // Создаём фильмы
+        Film film1 = filmService.saveFilm(validFilm());
+        Film film2 = filmService.saveFilm(validFilm());
+        Film film3 = filmService.saveFilm(validFilm());
+        Film film4 = filmService.saveFilm(validFilm());
+
+        // Добавляем лайки
+        filmService.addLike(film1.getId(), user1.getId());
+        filmService.addLike(film1.getId(), user2.getId());  // Общий
+
+        filmService.addLike(film2.getId(), user1.getId());  // Только user1
+        filmService.addLike(film2.getId(), user3.getId());
+
+        filmService.addLike(film3.getId(), user2.getId());  // Только user2
+        filmService.addLike(film3.getId(), user3.getId());
+
+        filmService.addLike(film4.getId(), user1.getId());
+        filmService.addLike(film4.getId(), user2.getId());  // Общий
+        filmService.addLike(film4.getId(), user3.getId());
+
+        // Общие фильмы user1 и user2 → film1 и film4
+        List<Film> common = filmService.getCommonFilms(user1.getId(), user2.getId());
+
+        assertEquals(2, common.size());
+        List<Integer> commonIds = common.stream().map(Film::getId).toList();
+        assertTrue(commonIds.contains(film1.getId()));
+        assertTrue(commonIds.contains(film4.getId()));
+        assertFalse(commonIds.contains(film2.getId()));
+        assertFalse(commonIds.contains(film3.getId()));
+    }
+
+    @Test
+    void shouldReturnEmptyListWhenNoCommonFilms() {
+        User user1 = userService.saveUser(validUser());
+        User user2 = userService.saveUser(validUser());
+
+        Film film1 = filmService.saveFilm(validFilm());
+        Film film2 = filmService.saveFilm(validFilm());
+
+        filmService.addLike(film1.getId(), user1.getId());  // Только user1
+        filmService.addLike(film2.getId(), user2.getId());  // Только user2
+
+        List<Film> common = filmService.getCommonFilms(user1.getId(), user2.getId());
+
+        assertTrue(common.isEmpty());
     }
 }
