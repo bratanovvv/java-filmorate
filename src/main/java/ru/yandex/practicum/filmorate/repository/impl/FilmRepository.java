@@ -92,6 +92,13 @@ public class FilmRepository extends AbstractRepository<Integer, Film> {
         return films;
     }
 
+    public List<Film> getUserRecommendations(Integer userId) {
+        List<Film> films = findAll(FilmQueries.FIND_RECOMMENDATIONS, userId, userId, userId);
+        loadGenresForFilms(films);
+        loadLikesForFilms(films);
+        return films;
+    }
+
     private void loadGenresForFilms(List<Film> films) {
         if (films.isEmpty()) {
             return;

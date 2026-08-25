@@ -85,6 +85,11 @@ public class FilmService {
         return filmRepository.getPopularFilms(count);
     }
 
+    public List<Film> getRecommendations(int userId) {
+        validateExistingUser(userId);
+        return filmRepository.getUserRecommendations(userId);
+    }
+
     public void deleteFilm(int id) {
         Film film = getFilm(id);
         filmRepository.delete(film.getId());

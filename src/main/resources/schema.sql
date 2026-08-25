@@ -42,6 +42,8 @@ CREATE TABLE IF NOT EXISTS likes (
     PRIMARY KEY (film_id, user_id)
 );
 
+CREATE INDEX IF NOT EXISTS idx_likes_user_id ON likes (user_id);
+
 CREATE TABLE IF NOT EXISTS friendships (
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
     friend_id INTEGER REFERENCES users(id) ON DELETE CASCADE,

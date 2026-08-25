@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -239,6 +240,160 @@ class FilmServiceTest {
         List<Film> popular = filmService.getPopularFilms(10);
 
         assertTrue(popular.isEmpty());
+    }
+
+    // -------- RECOMMENDATIONS --------
+
+    @Test
+    void shouldReturnRecommendationsFromSimilarUser() {
+        Film film1 = filmService.saveFilm(validFilm());
+        Film film2 = filmService.saveFilm(validFilm());
+        Film film3 = filmService.saveFilm(validFilm());
+        User user1 = userService.saveUser(validUser());
+        User user2 = userService.saveUser(validUser());
+        User user3 = userService.saveUser(validUser());
+
+        filmService.addLike(film1.getId(), user1.getId());
+        filmService.addLike(film2.getId(), user1.getId());
+        filmService.addLike(film1.getId(), user2.getId());
+        filmService.addLike(film2.getId(), user2.getId());
+        filmService.addLike(film3.getId(), user2.getId());
+        filmService.addLike(film1.getId(), user3.getId());
+
+        List<Film> recommendations = filmService.getRecommendations(user1.getId());
+
+        assertEquals(1, recommendations.size());
+        assertEquals(film3.getId(), recommendations.get(0).getId());
+    }
+
+    @Test
+    void shouldReturnEmptyWhenUserHasNoLikes() {
+        Film film1 = filmService.saveFilm(validFilm());
+        User user1 = userService.saveUser(validUser());
+        User user2 = userService.saveUser(validUser());
+        filmService.addLike(film1.getId(), user2.getId());
+
+        List<Film> recommendations = filmService.getRecommendations(user1.getId());
+
+        assertTrue(recommendations.isEmpty());
+    }
+
+    @Test
+    void shouldReturnEmptyWhenNoOverlapWithOtherUsers() {
+        Film film1 = filmService.saveFilm(validFilm());
+        Film film2 = filmService.saveFilm(validFilm());
+        User user1 = userService.saveUser(validUser());
+        User user2 = userService.saveUser(validUser());
+        filmService.addLike(film1.getId(), user1.getId());
+        filmService.addLike(film2.getId(), user2.getId());
+
+        List<Film> recommendations = filmService.getRecommendations(user1.getId());
+
+        assertTrue(recommendations.isEmpty());
+    }
+
+    @Test
+    void shouldExcludeFilmsAlreadyLikedByTargetUser() {
+        Film film1 = filmService.saveFilm(validFilm());
+        Film film2 = filmService.saveFilm(validFilm());
+        Film film3 = filmService.saveFilm(validFilm());
+        User user1 = userService.saveUser(validUser());
+        User user2 = userService.saveUser(validUser());
+        filmService.addLike(film1.getId(), user1.getId());
+        filmService.addLike(film2.getId(), user1.getId());
+        filmService.addLike(film3.getId(), user1.getId());
+        filmService.addLike(film1.getId(), user2.getId());
+        filmService.addLike(film2.getId(), user2.getId());
+        filmService.addLike(film3.getId(), user2.getId());
+
+        List<Film> recommendations = filmService.getRecommendations(user1.getId());
+
+        assertTrue(recommendations.isEmpty());
+    }
+
+    @Test
+    void shouldSelectOnlyTopSimilarUserFilms() {
+        Film film1 = filmService.saveFilm(validFilm());
+        Film film2 = filmService.saveFilm(validFilm());
+        Film film3 = filmService.saveFilm(validFilm());
+        Film film4 = filmService.saveFilm(validFilm());
+        Film film5 = filmService.saveFilm(validFilm());
+        User user1 = userService.saveUser(validUser());
+        User user2 = userService.saveUser(validUser());
+        User user3 = userService.saveUser(validUser());
+
+        filmService.addLike(film1.getId(), user1.getId());
+        filmService.addLike(film2.getId(), user1.getId());
+        filmService.addLike(film1.getId(), user2.getId());
+        filmService.addLike(film2.getId(), user2.getId());
+        filmService.addLike(film3.getId(), user2.getId());
+        filmService.addLike(film4.getId(), user2.getId());
+        filmService.addLike(film1.getId(), user3.getId());
+        filmService.addLike(film5.getId(), user3.getId());
+
+        List<Film> recommendations = filmService.getRecommendations(user1.getId());
+
+        assertEquals(2, recommendations.size());
+        assertTrue(recommendations.stream().map(Film::getId).toList()
+                .containsAll(List.of(film3.getId(), film4.getId())));
+        assertFalse(recommendations.stream().map(Film::getId).toList().contains(film5.getId()));
+    }
+
+    @Test
+    void shouldCombineRecommendationsFromTiedSimilarUsers() {
+        Film film1 = filmService.saveFilm(validFilm());
+        Film film2 = filmService.saveFilm(validFilm());
+        Film film3 = filmService.saveFilm(validFilm());
+        Film film4 = filmService.saveFilm(validFilm());
+        User user1 = userService.saveUser(validUser());
+        User user2 = userService.saveUser(validUser());
+        User user3 = userService.saveUser(validUser());
+
+        filmService.addLike(film1.getId(), user1.getId());
+        filmService.addLike(film2.getId(), user1.getId());
+        filmService.addLike(film1.getId(), user2.getId());
+        filmService.addLike(film2.getId(), user2.getId());
+        filmService.addLike(film3.getId(), user2.getId());
+        filmService.addLike(film1.getId(), user3.getId());
+        filmService.addLike(film2.getId(), user3.getId());
+        filmService.addLike(film4.getId(), user3.getId());
+
+        List<Film> recommendations = filmService.getRecommendations(user1.getId());
+
+        assertEquals(2, recommendations.size());
+        assertTrue(recommendations.stream().map(Film::getId).toList()
+                .containsAll(List.of(film3.getId(), film4.getId())));
+    }
+
+    @Test
+    void shouldOrderRecommendationsByPopularity() {
+        Film film1 = filmService.saveFilm(validFilm());
+        Film film2 = filmService.saveFilm(validFilm());
+        Film film3 = filmService.saveFilm(validFilm());
+        User user1 = userService.saveUser(validUser());
+        User user2 = userService.saveUser(validUser());
+        User user3 = userService.saveUser(validUser());
+
+        filmService.addLike(film1.getId(), user1.getId());
+        filmService.addLike(film1.getId(), user2.getId());
+        filmService.addLike(film2.getId(), user2.getId());
+        filmService.addLike(film3.getId(), user2.getId());
+        filmService.addLike(film3.getId(), user3.getId());
+
+        List<Film> recommendations = filmService.getRecommendations(user1.getId());
+
+        assertEquals(2, recommendations.size());
+        assertEquals(film3.getId(), recommendations.get(0).getId());
+        assertEquals(film2.getId(), recommendations.get(1).getId());
+    }
+
+    @Test
+    void shouldThrowWhenRecommendationsForUnknownUser() {
+        ApiException ex = assertThrows(
+                ApiException.class,
+                () -> filmService.getRecommendations(999)
+        );
+        assertEquals(ErrorCode.USER_NOT_FOUND, ex.getCode());
     }
 
     // -------- DELETE --------
