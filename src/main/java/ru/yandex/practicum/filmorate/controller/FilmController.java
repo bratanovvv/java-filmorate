@@ -93,4 +93,12 @@ public class FilmController {
     public void deleteFilm(@PathVariable int id) {
         filmService.deleteFilm(id);
     }
+
+    @GetMapping("/common")
+    public List<FilmDto> getCommonFilms(@RequestParam int userId, @RequestParam int friendId) {
+        List<Film> commonFilms = filmService.getCommonFilms(userId, friendId);
+        return commonFilms.stream()
+                .map(filmMapper::toDto)
+                .toList();
+    }
 }
