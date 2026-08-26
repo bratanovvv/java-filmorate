@@ -11,6 +11,6 @@ import java.time.Instant;
 @NoArgsConstructor
 public class ErrorResponse {
     private String path;
-    private String message;
+    private String error;
     private Instant timestamp;
 }

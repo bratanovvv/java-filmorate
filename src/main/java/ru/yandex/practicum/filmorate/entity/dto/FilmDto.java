@@ -39,4 +39,5 @@ public class FilmDto {
     private MpaRatingDto mpa;
 
     private Set<GenreDto> genres = new HashSet<>();
+    private Set<DirectorDto> directors = new HashSet<>();
 }

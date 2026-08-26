@@ -23,13 +23,9 @@ public class UserRepository extends AbstractRepository<Integer, User> {
 
     @Override
     public Optional<User> getById(Integer id) {
-        List<User> users = findAll(UserQueries.FIND_BY_ID, id);
-        if (users.isEmpty()) {
-            return Optional.empty();
-        }
-        User user = users.getFirst();
-        loadFriendsForUsers(List.of(user));
-        return Optional.of(user);
+        Optional<User> userOpt = findOne(UserQueries.FIND_BY_ID, id);
+        userOpt.ifPresent(u -> loadFriendsForUsers(List.of(u)));
+        return userOpt;
     }
 
     @Override
@@ -72,7 +68,11 @@ public class UserRepository extends AbstractRepository<Integer, User> {
 
     @Override
     public void delete(Integer id) {
-        deleteById(UserQueries.DELETE_USER, id);
+        deleteById(UserQueries.DELETE, id);
+    }
+
+    public boolean existsById(Integer id) {
+        return exists(UserQueries.EXISTS_BY_ID, id);
     }
 
     private void loadFriendsForUsers(List<User> users) {

@@ -17,4 +17,7 @@ public final class ValidationKeys {
     public static final String FILM_RELEASE_MIN_DATE = "{film.releaseDate.min}";
     public static final String FILM_DURATION_POSITIVE = "{film.duration.positive}";
     public static final String FILM_ID_NOT_NULL = "{film.id.notNull}";
+
+    public static final String DIRECTOR_ID_NOT_NULL = "{director.id.notNull}";
+    public static final String DIRECTOR_NAME_NOT_BLANK = "{director.name.notBlank}";
 }

@@ -9,6 +9,8 @@ public final class UserQueries {
     public static final String FIND_BY_ID = "SELECT * FROM users WHERE id = ?";
     public static final String FIND_ALL_BY_IDS = "SELECT * FROM users WHERE id IN (%s)";
 
+    public static final String EXISTS_BY_ID = "SELECT 1 FROM users WHERE id = ?";
+
     public static final String FIND_FRIENDS_BY_USER_IDS = """
             SELECT user_id, friend_id
             FROM friendships
@@ -25,6 +27,9 @@ public final class UserQueries {
             SET email = ?, login = ?, name = ?, birthday = ?
             WHERE id = ?
             """;
+    public static final String DELETE = """
+            DELETE FROM users WHERE id = ?
+            """;
 
     public static final String DELETE_FRIENDS = "DELETE FROM friendships WHERE user_id = ?";
 
@@ -32,6 +37,4 @@ public final class UserQueries {
             MERGE INTO friendships (user_id, friend_id, status_id) KEY(user_id, friend_id)
             VALUES (?, ?, 1)
             """;
-
-    public static final String DELETE_USER = "DELETE FROM users WHERE id = ?";
 }
