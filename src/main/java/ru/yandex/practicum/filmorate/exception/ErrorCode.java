@@ -18,6 +18,8 @@ public enum ErrorCode {
     // MPA_RATING
     MPA_RATING_NOT_FOUND("mpaRating.notFound", HttpStatus.NOT_FOUND.value()),
 
+    DIRECTOR_NOT_FOUND("director.notFound", HttpStatus.NOT_FOUND.value()),
+
     // INTERNAL
     INSERT_FAILED("error.insertFailed", HttpStatus.INTERNAL_SERVER_ERROR.value()),
 

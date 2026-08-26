@@ -147,8 +147,7 @@ class FilmRepositoryTest {
         Film film = filmRepository.save(validFilm());
         User user = userRepository.save(validUser());
 
-        film.getLikes().add(user.getId());
-        filmRepository.update(film);
+        filmRepository.addLike(film.getId(), user.getId());
 
         Optional<Film> loaded = filmRepository.getById(film.getId());
 
@@ -166,6 +165,161 @@ class FilmRepositoryTest {
 
         Optional<Film> loaded = filmRepository.getById(saved.getId());
         assertThat(loaded).isEmpty();
+    }
+
+    // -------- RECOMMENDATIONS --------
+
+    @Test
+    void shouldReturnRecommendationsFromSimilarUser() {
+        Film film1 = filmRepository.save(validFilm());
+        Film film2 = filmRepository.save(validFilm());
+        Film film3 = filmRepository.save(validFilm());
+        User user1 = userRepository.save(validUser());
+        User user2 = userRepository.save(validUser());
+        User user3 = userRepository.save(validUser());
+
+        like(film1, user1);
+        like(film2, user1);
+        like(film1, user2);
+        like(film2, user2);
+        like(film3, user2);
+        like(film1, user3);
+
+        List<Film> recommendations = filmRepository.getUserRecommendations(user1.getId());
+
+        assertThat(recommendations)
+                .hasSize(1)
+                .extracting(Film::getId)
+                .containsExactly(film3.getId());
+    }
+
+    @Test
+    void shouldReturnEmptyWhenUserHasNoLikes() {
+        Film film1 = filmRepository.save(validFilm());
+        User user1 = userRepository.save(validUser());
+        User user2 = userRepository.save(validUser());
+        like(film1, user2);
+
+        List<Film> recommendations = filmRepository.getUserRecommendations(user1.getId());
+
+        assertThat(recommendations).isEmpty();
+    }
+
+    @Test
+    void shouldReturnEmptyWhenNoOverlapWithOtherUsers() {
+        Film film1 = filmRepository.save(validFilm());
+        Film film2 = filmRepository.save(validFilm());
+        User user1 = userRepository.save(validUser());
+        User user2 = userRepository.save(validUser());
+        like(film1, user1);
+        like(film2, user2);
+
+        List<Film> recommendations = filmRepository.getUserRecommendations(user1.getId());
+
+        assertThat(recommendations).isEmpty();
+    }
+
+    @Test
+    void shouldExcludeFilmsAlreadyLikedByTargetUser() {
+        Film film1 = filmRepository.save(validFilm());
+        Film film2 = filmRepository.save(validFilm());
+        Film film3 = filmRepository.save(validFilm());
+        User user1 = userRepository.save(validUser());
+        User user2 = userRepository.save(validUser());
+        like(film1, user1);
+        like(film2, user1);
+        like(film3, user1);
+        like(film1, user2);
+        like(film2, user2);
+        like(film3, user2);
+
+        List<Film> recommendations = filmRepository.getUserRecommendations(user1.getId());
+
+        assertThat(recommendations).isEmpty();
+    }
+
+    @Test
+    void shouldSelectOnlyTopSimilarUserFilms() {
+        Film film1 = filmRepository.save(validFilm());
+        Film film2 = filmRepository.save(validFilm());
+        Film film3 = filmRepository.save(validFilm());
+        Film film4 = filmRepository.save(validFilm());
+        Film film5 = filmRepository.save(validFilm());
+        User user1 = userRepository.save(validUser());
+        User user2 = userRepository.save(validUser());
+        User user3 = userRepository.save(validUser());
+
+        like(film1, user1);
+        like(film2, user1);
+        like(film1, user2);
+        like(film2, user2);
+        like(film3, user2);
+        like(film4, user2);
+        like(film1, user3);
+        like(film5, user3);
+
+        List<Film> recommendations = filmRepository.getUserRecommendations(user1.getId());
+
+        assertThat(recommendations)
+                .hasSize(2)
+                .extracting(Film::getId)
+                .containsExactlyInAnyOrder(film3.getId(), film4.getId())
+                .doesNotContain(film5.getId());
+    }
+
+    @Test
+    void shouldCombineRecommendationsFromTiedSimilarUsers() {
+        Film film1 = filmRepository.save(validFilm());
+        Film film2 = filmRepository.save(validFilm());
+        Film film3 = filmRepository.save(validFilm());
+        Film film4 = filmRepository.save(validFilm());
+        User user1 = userRepository.save(validUser());
+        User user2 = userRepository.save(validUser());
+        User user3 = userRepository.save(validUser());
+
+        like(film1, user1);
+        like(film2, user1);
+        like(film1, user2);
+        like(film2, user2);
+        like(film3, user2);
+        like(film1, user3);
+        like(film2, user3);
+        like(film4, user3);
+
+        List<Film> recommendations = filmRepository.getUserRecommendations(user1.getId());
+
+        assertThat(recommendations)
+                .hasSize(2)
+                .extracting(Film::getId)
+                .containsExactlyInAnyOrder(film3.getId(), film4.getId());
+    }
+
+    @Test
+    void shouldOrderRecommendationsByPopularity() {
+        Film film1 = filmRepository.save(validFilm());
+        Film film2 = filmRepository.save(validFilm());
+        Film film3 = filmRepository.save(validFilm());
+        User user1 = userRepository.save(validUser());
+        User user2 = userRepository.save(validUser());
+        User user3 = userRepository.save(validUser());
+
+        like(film1, user1);
+        like(film1, user2);
+        like(film2, user2);
+        like(film3, user2);
+        like(film3, user3);
+
+        List<Film> recommendations = filmRepository.getUserRecommendations(user1.getId());
+
+        assertThat(recommendations)
+                .hasSize(2)
+                .extracting(Film::getId)
+                .containsExactly(film3.getId(), film2.getId());
+    }
+
+    private void like(Film film, User user) {
+        film.getLikes().add(user.getId());
+        filmRepository.update(film);
     }
 
     private Film validFilm() {

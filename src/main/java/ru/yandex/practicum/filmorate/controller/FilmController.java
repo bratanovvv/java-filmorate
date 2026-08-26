@@ -1,19 +1,14 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.entity.dao.Film;
+import ru.yandex.practicum.filmorate.entity.dao.util.FilmSortOption;
 import ru.yandex.practicum.filmorate.entity.dto.FilmDto;
 import ru.yandex.practicum.filmorate.entity.dto.validation.ValidationGroups;
 import ru.yandex.practicum.filmorate.entity.mapper.Mapper;
@@ -74,8 +69,21 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public List<FilmDto> getPopularFilms(@RequestParam(defaultValue = DEFAULT_POPULAR_COUNT) int count) {
-        List<Film> films = filmService.getPopularFilms(count);
+    public List<FilmDto> getPopularFilms(
+            @RequestParam(defaultValue = DEFAULT_POPULAR_COUNT) @Positive int count,
+            @RequestParam(required = false) @Positive Long genreId,
+            @RequestParam(required = false) @Min(1895) @Max(2100) Integer year
+    ) {
+        List<Film> films = filmService.popular(count, genreId, year);
+        return films.stream()
+                .map(filmMapper::toDto)
+                .toList();
+    }
+
+    @GetMapping("/director/{directorId}")
+    public List<FilmDto> getDirectorFilms(@PathVariable int directorId,
+                                          @RequestParam(defaultValue = "year") FilmSortOption sortBy) {
+        List<Film> films = filmService.getFilmsByDirector(directorId, sortBy);
         return films.stream()
                 .map(filmMapper::toDto)
                 .toList();
@@ -85,5 +93,13 @@ public class FilmController {
     @DeleteMapping("/{id}")
     public void deleteFilm(@PathVariable int id) {
         filmService.deleteFilm(id);
+    }
+
+    @GetMapping("/common")
+    public List<FilmDto> getCommonFilms(@RequestParam int userId, @RequestParam int friendId) {
+        List<Film> commonFilms = filmService.getCommonFilms(userId, friendId);
+        return commonFilms.stream()
+                .map(filmMapper::toDto)
+                .toList();
     }
 }

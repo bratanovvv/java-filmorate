@@ -12,10 +12,12 @@ public class FilmMapper implements Mapper<FilmDto, Film> {
 
     private final MpaRatingMapper mpaRatingMapper;
     private final GenreMapper genreMapper;
+    private final DirectorMapper directorMapper;
 
-    public FilmMapper(MpaRatingMapper mpaRatingMapper, GenreMapper genreMapper) {
+    public FilmMapper(MpaRatingMapper mpaRatingMapper, GenreMapper genreMapper, DirectorMapper directorMapper) {
         this.mpaRatingMapper = mpaRatingMapper;
         this.genreMapper = genreMapper;
+        this.directorMapper = directorMapper;
     }
 
     @Override
@@ -32,6 +34,9 @@ public class FilmMapper implements Mapper<FilmDto, Film> {
         dto.setMpa(mpaRatingMapper.toDto(film.getMpa()));
         dto.setGenres(film.getGenres().stream()
                 .map(genreMapper::toDto)
+                .collect(Collectors.toSet()));
+        dto.setDirectors(film.getDirectors().stream()
+                .map(directorMapper::toDto)
                 .collect(Collectors.toSet()));
         return dto;
     }
@@ -50,6 +55,9 @@ public class FilmMapper implements Mapper<FilmDto, Film> {
         film.setMpa(mpaRatingMapper.toEntity(dto.getMpa()));
         film.getGenres().addAll(dto.getGenres().stream()
                 .map(genreMapper::toEntity)
+                .collect(Collectors.toSet()));
+        film.getDirectors().addAll(dto.getDirectors().stream()
+                .map(directorMapper::toEntity)
                 .collect(Collectors.toSet()));
         return film;
     }

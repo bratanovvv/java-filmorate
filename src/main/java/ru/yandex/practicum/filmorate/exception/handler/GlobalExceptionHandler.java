@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -36,12 +37,12 @@ public class GlobalExceptionHandler {
         ErrorCode code = ex.getCode();
 
         ErrorResponse body = ErrorResponse.builder()
-                .message(messageSource.getMessage(code.getKey(), ex.getArgs(), locale()))
+                .error(messageSource.getMessage(code.getKey(), ex.getArgs(), locale()))
                 .timestamp(Instant.now())
                 .path(String.format("%s %s", request.getMethod(), request.getRequestURI()))
                 .build();
 
-        log.warn("Ошибка приложения: {}", body.getMessage());
+        log.warn("Ошибка приложения: {}", body.getError());
         return ResponseEntity.status(code.getHttpStatus()).body(body);
     }
 
@@ -60,11 +61,26 @@ public class GlobalExceptionHandler {
         log.warn("Ошибка валидации: {}", fields);
 
         ValidationErrorResponse body = ValidationErrorResponse.builder()
-                .message(messageSource.getMessage("error.validation", null, locale()))
+                .error(messageSource.getMessage("error.validation", null, locale()))
                 .path(String.format("%s %s", request.getMethod(), request.getRequestURI()))
                 .fields(fields)
                 .timestamp(Instant.now())
                 .build();
+        return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleMessageNotReadable(HttpMessageNotReadableException ex,
+                                                                  HttpServletRequest request) {
+        String message = messageSource.getMessage("error.badRequest", null, locale());
+
+        ErrorResponse body = ErrorResponse.builder()
+                .error(message)
+                .path(String.format("%s %s", request.getMethod(), request.getRequestURI()))
+                .timestamp(Instant.now())
+                .build();
+
+        log.warn("Ошибка чтения тела запроса: {}", ex.getMessage());
         return ResponseEntity.badRequest().body(body);
     }
 
@@ -73,7 +89,7 @@ public class GlobalExceptionHandler {
         log.error("Внутренняя ошибка приложения: ", ex);
 
         ErrorResponse body = ErrorResponse.builder()
-                .message(messageSource.getMessage("error.internal", null, locale()))
+                .error(messageSource.getMessage("error.internal", null, locale()))
                 .path(String.format("%s %s", request.getMethod(), request.getRequestURI()))
                 .timestamp(Instant.now())
                 .build();
