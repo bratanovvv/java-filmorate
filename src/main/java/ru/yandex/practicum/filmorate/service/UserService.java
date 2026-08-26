@@ -4,9 +4,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.yandex.practicum.filmorate.entity.dao.Event;
 import ru.yandex.practicum.filmorate.exception.ApiException;
 import ru.yandex.practicum.filmorate.exception.ErrorCode;
 import ru.yandex.practicum.filmorate.entity.dao.User;
+import ru.yandex.practicum.filmorate.entity.dao.util.EventOperation;
+import ru.yandex.practicum.filmorate.entity.dao.util.EventType;
 import ru.yandex.practicum.filmorate.repository.impl.UserRepository;
 
 import java.util.List;
@@ -18,6 +21,7 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final EventService eventService;
 
     public User getUser(int id) {
         return userRepository.getById(id)
@@ -35,7 +39,6 @@ public class UserService {
 
         User saved = userRepository.save(user);
         log.info("Создан пользователь: id={}, login={}", saved.getId(), saved.getLogin());
-
         return saved;
     }
 
@@ -51,9 +54,7 @@ public class UserService {
         existingUser.setBirthday(user.getBirthday());
 
         User updated = userRepository.update(existingUser);
-
         log.info("Обновлён пользователь: id={}, login={}", updated.getId(), updated.getLogin());
-
         return updated;
     }
 
@@ -65,7 +66,7 @@ public class UserService {
         user.getFriends().add(friendId);
 
         userRepository.update(user);
-
+        eventService.record(EventType.FRIEND, EventOperation.ADD, userId, friendId);
         log.info("Пользователь id={} добавил в друзья пользователя id={}", userId, friendId);
     }
 
@@ -77,6 +78,7 @@ public class UserService {
         user.getFriends().remove(friendId);
 
         userRepository.update(user);
+        eventService.record(EventType.FRIEND, EventOperation.REMOVE, userId, friendId);
         log.info("Пользователь id={} удалил из друзей пользователя id={}", userId, friendId);
     }
 
@@ -97,10 +99,17 @@ public class UserService {
                 ));
     }
 
+    @Transactional
     public void deleteUser(int userId) {
         checkUserExists(userId);
         userRepository.delete(userId);
         log.info("Удален пользователь: id={}", userId);
+    }
+
+
+    public List<Event> getUserFeed(int userId) {
+        checkUserExists(userId);
+        return eventService.findFeedForUser(userId);
     }
 
     public void checkUserExists(int userId) {

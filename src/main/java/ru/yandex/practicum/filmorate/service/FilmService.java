@@ -7,6 +7,8 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.entity.dao.Director;
 import ru.yandex.practicum.filmorate.entity.dao.Film;
 import ru.yandex.practicum.filmorate.entity.dao.Genre;
+import ru.yandex.practicum.filmorate.entity.dao.util.EventOperation;
+import ru.yandex.practicum.filmorate.entity.dao.util.EventType;
 import ru.yandex.practicum.filmorate.entity.dao.util.FilmSortOption;
 import ru.yandex.practicum.filmorate.exception.ApiException;
 import ru.yandex.practicum.filmorate.exception.ErrorCode;
@@ -24,6 +26,7 @@ public class FilmService {
     private final MpaRatingService mpaRatingService;
     private final GenreService genreService;
     private final DirectorService directorService;
+    private final EventService eventService;
 
     public Film getFilm(int id) {
         return filmRepository.getById(id)
@@ -70,6 +73,7 @@ public class FilmService {
         userService.checkUserExists(userId);
 
         filmRepository.addLike(filmId, userId);
+        eventService.record(EventType.LIKE, EventOperation.ADD, userId, filmId);
         log.info("Пользователь id={} поставил лайк фильму id={}", userId, filmId);
     }
 
@@ -79,6 +83,7 @@ public class FilmService {
         userService.checkUserExists(userId);
 
         filmRepository.removeLike(filmId, userId);
+        eventService.record(EventType.LIKE, EventOperation.REMOVE, userId, filmId);
         log.info("Пользователь id={} убрал лайк с фильма id={}", userId, filmId);
     }
 
@@ -101,6 +106,7 @@ public class FilmService {
         return filmRepository.getUserRecommendations(userId);
     }
 
+    @Transactional
     public void deleteFilm(int filmId) {
         checkFilmExists(filmId);
         filmRepository.delete(filmId);

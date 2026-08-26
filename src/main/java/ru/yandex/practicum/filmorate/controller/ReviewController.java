@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
@@ -25,6 +26,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/reviews")
 @RequiredArgsConstructor
+@Validated
 public class ReviewController {
 
     private final ReviewService reviewService;
@@ -39,7 +41,7 @@ public class ReviewController {
     @GetMapping
     public List<ReviewDto> getReviews(
             @RequestParam(required = false) Integer filmId,
-            @RequestParam(defaultValue = "10") int count) {
+            @RequestParam(defaultValue = "10") @Positive int count) {
         return reviewService.getReviews(filmId, count).stream()
                 .map(reviewMapper::toDto)
                 .toList();

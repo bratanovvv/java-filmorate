@@ -19,6 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/films")
 @RequiredArgsConstructor
+@Validated
 public class FilmController {
 
     private static final String DEFAULT_POPULAR_COUNT = "10";
