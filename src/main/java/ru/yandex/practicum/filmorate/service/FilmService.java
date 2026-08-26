@@ -81,13 +81,28 @@ public class FilmService {
         log.info("Пользователь id={} убрал лайк с фильма id={}", userId, filmId);
     }
 
-    public List<Film> getPopularFilms(int count) {
-        return filmRepository.getPopularFilms(count);
+    public List<Film> popular(int count, Long genreId, Integer year) {
+        log.info("Запрос популярных фильмов: count={}, genreId={}, year={}", count, genreId, year);
+
+        List<Film> films;
+        films = filmRepository.findPopularByGenreAndYear(count, genreId, year);
+
+        return films;
     }
 
     public void deleteFilm(int id) {
         Film film = getFilm(id);
         filmRepository.delete(film.getId());
+    }
+
+    public List<Film> getCommonFilms(int userId, int friendId) {
+        userService.getUser(userId);
+        userService.getUser(friendId);
+
+        log.info("Поиск общих фильмов для пользователей: userId={}, friendId={}", userId, friendId);
+        List<Film> films = filmRepository.getCommonFilms(userId, friendId);
+        log.info("Найдено общих фильмов: {}", films.size());
+        return films;
     }
 
     private void validateExistingFilm(Film film) {

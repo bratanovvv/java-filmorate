@@ -92,6 +92,24 @@ public class FilmRepository extends AbstractRepository<Integer, Film> {
         return films;
     }
 
+    public List<Film> findPopularByGenreAndYear(int count, Long genreId, Integer year) {
+        List<Film> films = findAll(FilmQueries.FIND_POPULAR_BY_GENRE_AND_YEAR,
+                genreId, genreId,
+                year, year,
+                count
+        );
+        loadGenresForFilms(films);
+        loadLikesForFilms(films);
+        return films;
+    }
+
+    public List<Film> getCommonFilms(int userId, int friendId) {
+        List<Film> films = findAll(FilmQueries.COMMON_FILMS, userId, friendId);
+        loadGenresForFilms(films);
+        loadLikesForFilms(films);
+        return films;
+    }
+
     private void loadGenresForFilms(List<Film> films) {
         if (films.isEmpty()) {
             return;
