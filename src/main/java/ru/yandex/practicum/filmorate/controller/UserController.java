@@ -12,10 +12,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import ru.yandex.practicum.filmorate.entity.dao.Film;
 import ru.yandex.practicum.filmorate.entity.dao.User;
+import ru.yandex.practicum.filmorate.entity.dto.FilmDto;
 import ru.yandex.practicum.filmorate.entity.dto.UserDto;
 import ru.yandex.practicum.filmorate.entity.dto.validation.ValidationGroups;
 import ru.yandex.practicum.filmorate.entity.mapper.Mapper;
+import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.List;
@@ -26,7 +29,9 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
+    private final FilmService filmService;
     private final Mapper<UserDto, User> userMapper;
+    private final Mapper<FilmDto, Film> filmMapper;
 
     @GetMapping("/{id}")
     public UserDto getUser(@PathVariable int id) {
@@ -90,5 +95,13 @@ public class UserController {
     @DeleteMapping("/{id}")
     public void deleteUser(@PathVariable int id) {
         userService.deleteUser(id);
+    }
+
+    @GetMapping("/{id}/recommendations")
+    public List<FilmDto> getRecommendations(@PathVariable int id) {
+        List<Film> films = filmService.getRecommendations(id);
+        return films.stream()
+                .map(filmMapper::toDto)
+                .toList();
     }
 }

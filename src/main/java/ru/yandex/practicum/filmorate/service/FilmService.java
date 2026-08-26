@@ -96,6 +96,11 @@ public class FilmService {
         return filmRepository.getFilmsByDirector(director.getId(), sortBy);
     }
 
+    public List<Film> getRecommendations(int userId) {
+        userService.checkUserExists(userId);
+        return filmRepository.getUserRecommendations(userId);
+    }
+
     public void deleteFilm(int filmId) {
         checkFilmExists(filmId);
         filmRepository.delete(filmId);

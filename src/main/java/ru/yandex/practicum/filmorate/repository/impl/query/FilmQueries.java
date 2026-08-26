@@ -71,6 +71,7 @@ public final class FilmQueries {
             """;
 
     public static final String DELETE_GENRES = "DELETE FROM film_genres WHERE film_id = ?";
+
     public static final String DELETE_DIRECTORS = "DELETE FROM film_directors WHERE film_id = ?";
 
     public static final String MERGE_GENRE = """
@@ -83,6 +84,7 @@ public final class FilmQueries {
             """;
 
     public static final String ADD_LIKE = "INSERT INTO likes (film_id, user_id) VALUES (?, ?)";
+
     public static final String DELETE_LIKE = "DELETE FROM likes WHERE film_id = ? AND user_id = ?";
 
     public static final String FIND_BY_DIRECTOR_ORDER_BY_YEAR = """
@@ -102,6 +104,7 @@ public final class FilmQueries {
             WHERE fd.director_id = ?
             ORDER BY (SELECT COUNT(*) FROM likes l WHERE l.film_id = f.id) DESC, f.id ASC
             """;
+
     public static final String FIND_POPULAR_BY_GENRE_AND_YEAR = """
         SELECT
             f.id,
@@ -129,8 +132,6 @@ public final class FilmQueries {
         LIMIT ?
         """;
 
-    public static final String DELETE_FILM = "DELETE FROM films WHERE id = ?";
-
     public static final String COMMON_FILMS = """
     SELECT
         f.id,
@@ -154,4 +155,39 @@ public final class FilmQueries {
     )
     ORDER BY f.id;
     """;
+
+    public static final String FIND_RECOMMENDATIONS = """
+            WITH similar_users AS (
+                SELECT l2.user_id, COUNT(*) AS overlap
+                FROM likes l1
+                JOIN likes l2 ON l1.film_id = l2.film_id
+                WHERE l1.user_id = ? AND l2.user_id != ?
+                GROUP BY l2.user_id
+            ),
+            top_similar AS (
+                SELECT user_id
+                FROM similar_users
+                WHERE overlap = (SELECT MAX(overlap) FROM similar_users)
+            ),
+            candidate_films AS (
+                SELECT DISTINCT l.film_id
+                FROM likes l
+                JOIN top_similar ts ON ts.user_id = l.user_id
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM likes ul
+                    WHERE ul.film_id = l.film_id AND ul.user_id = ?
+                )
+            ),
+            like_counts AS (
+                SELECT film_id, COUNT(*) AS cnt
+                FROM likes
+                GROUP BY film_id
+            )
+            SELECT f.*, m.name AS mpa_name
+            FROM films f
+            JOIN candidate_films cf ON cf.film_id = f.id
+            LEFT JOIN mpa_ratings m ON f.mpa_rating_id = m.id
+            LEFT JOIN like_counts lc ON lc.film_id = f.id
+            ORDER BY COALESCE(lc.cnt, 0) DESC, f.id ASC
+            """;
 }
