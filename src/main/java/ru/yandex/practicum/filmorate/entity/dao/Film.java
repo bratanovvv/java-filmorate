@@ -22,4 +22,7 @@ public class Film {
 
     @Setter(AccessLevel.NONE)
     private Set<Genre> genres = new HashSet<>();
+
+    @Setter(AccessLevel.NONE)
+    private Set<Director> directors = new HashSet<>();
 }

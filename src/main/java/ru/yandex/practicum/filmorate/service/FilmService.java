@@ -4,10 +4,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.yandex.practicum.filmorate.entity.dao.Director;
+import ru.yandex.practicum.filmorate.entity.dao.Film;
+import ru.yandex.practicum.filmorate.entity.dao.Genre;
+import ru.yandex.practicum.filmorate.entity.dao.util.FilmSortOption;
 import ru.yandex.practicum.filmorate.exception.ApiException;
 import ru.yandex.practicum.filmorate.exception.ErrorCode;
-import ru.yandex.practicum.filmorate.entity.dao.Film;
-import ru.yandex.practicum.filmorate.entity.dao.User;
 import ru.yandex.practicum.filmorate.repository.impl.FilmRepository;
 
 import java.util.List;
@@ -21,6 +23,7 @@ public class FilmService {
     private final UserService userService;
     private final MpaRatingService mpaRatingService;
     private final GenreService genreService;
+    private final DirectorService directorService;
 
     public Film getFilm(int id) {
         return filmRepository.getById(id)
@@ -53,31 +56,29 @@ public class FilmService {
         existingFilm.setMpa(film.getMpa());
         existingFilm.getGenres().clear();
         existingFilm.getGenres().addAll(film.getGenres());
+        existingFilm.getDirectors().clear();
+        existingFilm.getDirectors().addAll(film.getDirectors());
+        Film updated = filmRepository.update(existingFilm);
+        log.info("Обновлён фильм: id={}, name={}", updated.getId(), updated.getName());
 
-        log.info("Обновлён фильм: id={}, name={}", existingFilm.getId(), existingFilm.getName());
-
-        return filmRepository.update(existingFilm);
+        return updated;
     }
 
     @Transactional
     public void addLike(int filmId, int userId) {
-        Film film = getFilm(filmId);
-        User user = userService.getUser(userId);
+        checkFilmExists(filmId);
+        userService.checkUserExists(userId);
 
-        film.getLikes().add(userId);
-        filmRepository.update(film);
-
+        filmRepository.addLike(filmId, userId);
         log.info("Пользователь id={} поставил лайк фильму id={}", userId, filmId);
     }
 
     @Transactional
     public void removeLike(int filmId, int userId) {
-        Film film = getFilm(filmId);
-        validateExistingUser(userId);
+        checkFilmExists(filmId);
+        userService.checkUserExists(userId);
 
-        film.getLikes().remove(userId);
-        filmRepository.update(film);
-
+        filmRepository.removeLike(filmId, userId);
         log.info("Пользователь id={} убрал лайк с фильма id={}", userId, filmId);
     }
 
@@ -90,9 +91,15 @@ public class FilmService {
         return films;
     }
 
-    public void deleteFilm(int id) {
-        Film film = getFilm(id);
-        filmRepository.delete(film.getId());
+    public List<Film> getFilmsByDirector(int directorId, FilmSortOption sortBy) {
+        Director director = directorService.getDirector(directorId);
+        return filmRepository.getFilmsByDirector(director.getId(), sortBy);
+    }
+
+    public void deleteFilm(int filmId) {
+        checkFilmExists(filmId);
+        filmRepository.delete(filmId);
+        log.info("Удален фильм: id={}", filmId);
     }
 
     public List<Film> getCommonFilms(int userId, int friendId) {
@@ -109,12 +116,18 @@ public class FilmService {
         if (film.getMpa() != null) {
             mpaRatingService.getMpaRating(film.getMpa().getId());
         }
-        for (var genre : film.getGenres()) {
+        for (Genre genre : film.getGenres()) {
             genreService.getGenre(genre.getId());
+        }
+
+        for (Director director : film.getDirectors()) {
+            directorService.getDirector(director.getId());
         }
     }
 
-    private void validateExistingUser(int userId) {
-        userService.getUser(userId);
+    private void checkFilmExists(int filmId) {
+        if (!filmRepository.existsById(filmId)) {
+            throw new ApiException(ErrorCode.FILM_NOT_FOUND, filmId);
+        }
     }
 }

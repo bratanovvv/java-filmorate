@@ -109,4 +109,12 @@ public abstract class AbstractRepository<K, V> implements Repository<K, V> {
             throw new ApiException(ErrorCode.DELETE_FAILED);
         }
     }
+
+    /**
+     * Проверяет существование записи по запросу;
+     * возвращает true, если найдена хотя бы одна строка.
+     */
+    protected boolean exists(String query, Object... params) {
+        return !jdbc.queryForList(query, Integer.class, params).isEmpty();
+    }
 }

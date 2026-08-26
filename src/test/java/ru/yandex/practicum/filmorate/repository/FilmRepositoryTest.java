@@ -147,8 +147,7 @@ class FilmRepositoryTest {
         Film film = filmRepository.save(validFilm());
         User user = userRepository.save(validUser());
 
-        film.getLikes().add(user.getId());
-        filmRepository.update(film);
+        filmRepository.addLike(film.getId(), user.getId());
 
         Optional<Film> loaded = filmRepository.getById(film.getId());
 
