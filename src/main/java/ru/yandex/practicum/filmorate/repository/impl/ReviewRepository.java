@@ -5,7 +5,6 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.entity.dao.Review;
 import ru.yandex.practicum.filmorate.repository.AbstractRepository;
-import ru.yandex.practicum.filmorate.repository.impl.query.FilmQueries;
 import ru.yandex.practicum.filmorate.repository.impl.query.ReviewQueries;
 
 import java.util.Collection;
