@@ -1,9 +1,9 @@
 package ru.yandex.practicum.filmorate.repository.impl.query;
 
-public final class UserQueries {
+import lombok.experimental.UtilityClass;
 
-    private UserQueries() {
-    }
+@UtilityClass
+public final class UserQueries {
 
     public static final String FIND_ALL = "SELECT * FROM users";
     public static final String FIND_BY_ID = "SELECT * FROM users WHERE id = ?";

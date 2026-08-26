@@ -5,6 +5,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.entity.dao.Review;
 import ru.yandex.practicum.filmorate.repository.AbstractRepository;
+import ru.yandex.practicum.filmorate.repository.impl.query.FilmQueries;
 import ru.yandex.practicum.filmorate.repository.impl.query.ReviewQueries;
 
 import java.util.Collection;
@@ -20,8 +21,7 @@ public class ReviewRepository extends AbstractRepository<Integer, Review> {
 
     @Override
     public Optional<Review> getById(Integer id) {
-        List<Review> result = jdbc.query(ReviewQueries.FIND_BY_ID, rowMapper, id);
-        return result.isEmpty() ? Optional.empty() : Optional.of(result.getFirst());
+        return findOne(ReviewQueries.FIND_BY_ID, id);
     }
 
     public List<Review> findByFilmId(Integer filmId, int count) {
@@ -39,7 +39,6 @@ public class ReviewRepository extends AbstractRepository<Integer, Review> {
         return review;
     }
 
-
     @Override
     public void delete(Integer id) {
         deleteById(ReviewQueries.DELETE_REVIEW, id);
@@ -54,14 +53,6 @@ public class ReviewRepository extends AbstractRepository<Integer, Review> {
         return review;
     }
 
-    public void addRating(int reviewId, int userId, boolean isLike) {
-        jdbc.update(ReviewQueries.MERGE_RATING, reviewId, userId, isLike);
-    }
-
-    public void removeRating(int reviewId, int userId) {
-        jdbc.update(ReviewQueries.DELETE_RATING, reviewId, userId);
-    }
-
     @Override
     public List<Review> getAll() {
         return findAll(ReviewQueries.FIND_ALL);
@@ -70,5 +61,17 @@ public class ReviewRepository extends AbstractRepository<Integer, Review> {
     @Override
     public List<Review> findAllByIds(Collection<Integer> ids) {
         return findByIds(ReviewQueries.FIND_ALL_BY_IDS, ids);
+    }
+
+    public void addRating(int reviewId, int userId, boolean isLike) {
+        executeUpdate(true, ReviewQueries.MERGE_RATING, reviewId, userId, isLike);
+    }
+
+    public void removeRating(int reviewId, int userId) {
+        executeUpdate(true, ReviewQueries.DELETE_RATING, reviewId, userId);
+    }
+
+    public boolean existsById(int reviewId) {
+        return exists(ReviewQueries.EXISTS_BY_ID, reviewId);
     }
 }

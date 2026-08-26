@@ -66,8 +66,16 @@ public abstract class AbstractRepository<K, V> implements Repository<K, V> {
      * бросает {@code ApiException(UPDATE_FAILED)}, если затронуто 0 строк.
      */
     protected void executeUpdate(String query, Object... params) {
+       executeUpdate(false, query, params);
+    }
+
+    /**
+     * Выполняет UPDATE;
+     * бросает {@code ApiException(UPDATE_FAILED)}, если затронуто 0 строк.
+     */
+    protected void executeUpdate(boolean force, String query, Object... params) {
         int rowsUpdated = jdbc.update(query, params);
-        if (rowsUpdated == 0) {
+        if (!force && rowsUpdated == 0) {
             throw new ApiException(ErrorCode.UPDATE_FAILED);
         }
     }

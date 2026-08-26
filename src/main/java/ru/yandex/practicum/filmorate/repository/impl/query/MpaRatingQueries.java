@@ -1,9 +1,9 @@
 package ru.yandex.practicum.filmorate.repository.impl.query;
 
-public final class MpaRatingQueries {
+import lombok.experimental.UtilityClass;
 
-    private MpaRatingQueries() {
-    }
+@UtilityClass
+public final class MpaRatingQueries {
 
     public static final String FIND_ALL = "SELECT * FROM mpa_ratings ORDER BY id";
     public static final String FIND_BY_ID = "SELECT * FROM mpa_ratings WHERE id = ?";

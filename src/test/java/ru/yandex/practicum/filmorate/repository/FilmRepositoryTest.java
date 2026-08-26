@@ -318,8 +318,7 @@ class FilmRepositoryTest {
     }
 
     private void like(Film film, User user) {
-        film.getLikes().add(user.getId());
-        filmRepository.update(film);
+        filmRepository.addLike(film.getId(), user.getId());
     }
 
     private Film validFilm() {

@@ -117,6 +117,12 @@ public class FilmService {
         return films;
     }
 
+    public void checkFilmExists(int filmId) {
+        if (!filmRepository.existsById(filmId)) {
+            throw new ApiException(ErrorCode.FILM_NOT_FOUND, filmId);
+        }
+    }
+
     private void validateExistingFilm(Film film) {
         if (film.getMpa() != null) {
             mpaRatingService.getMpaRating(film.getMpa().getId());
@@ -127,12 +133,6 @@ public class FilmService {
 
         for (Director director : film.getDirectors()) {
             directorService.getDirector(director.getId());
-        }
-    }
-
-    private void checkFilmExists(int filmId) {
-        if (!filmRepository.existsById(filmId)) {
-            throw new ApiException(ErrorCode.FILM_NOT_FOUND, filmId);
         }
     }
 }
