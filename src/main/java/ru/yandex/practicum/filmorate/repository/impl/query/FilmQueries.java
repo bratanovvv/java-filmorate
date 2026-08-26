@@ -71,6 +71,7 @@ public final class FilmQueries {
             """;
 
     public static final String DELETE_GENRES = "DELETE FROM film_genres WHERE film_id = ?";
+
     public static final String DELETE_DIRECTORS = "DELETE FROM film_directors WHERE film_id = ?";
 
     public static final String MERGE_GENRE = """
@@ -83,6 +84,7 @@ public final class FilmQueries {
             """;
 
     public static final String ADD_LIKE = "INSERT INTO likes (film_id, user_id) VALUES (?, ?)";
+
     public static final String DELETE_LIKE = "DELETE FROM likes WHERE film_id = ? AND user_id = ?";
 
     public static final String FIND_BY_DIRECTOR_ORDER_BY_YEAR = """
@@ -102,6 +104,7 @@ public final class FilmQueries {
             WHERE fd.director_id = ?
             ORDER BY (SELECT COUNT(*) FROM likes l WHERE l.film_id = f.id) DESC, f.id ASC
             """;
+
     public static final String FIND_POPULAR_BY_GENRE_AND_YEAR = """
         SELECT
             f.id,
@@ -128,8 +131,6 @@ public final class FilmQueries {
         ORDER BY likes_count DESC, f.id
         LIMIT ?
         """;
-
-    public static final String DELETE_FILM = "DELETE FROM films WHERE id = ?";
 
     public static final String COMMON_FILMS = """
     SELECT

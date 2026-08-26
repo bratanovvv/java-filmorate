@@ -97,7 +97,7 @@ public class FilmService {
     }
 
     public List<Film> getRecommendations(int userId) {
-        validateExistingUser(userId);
+        userService.checkUserExists(userId);
         return filmRepository.getUserRecommendations(userId);
     }
 
