@@ -21,18 +21,19 @@ public class ReviewController {
     private final ReviewService reviewService;
     private final Mapper<ReviewDto, Review> reviewMapper;
 
-    @GetMapping
-    public List<ReviewDto> getReviews() {
-        List<Review> reviews = reviewService.getReviews();
-        return reviews.stream()
-                .map(reviewMapper::toDto)
-                .toList();
-    }
-
     @GetMapping("/{id}")
     public ReviewDto getReview(@PathVariable int id) {
         Review review = reviewService.getReview(id);
         return reviewMapper.toDto(review);
+    }
+
+    @GetMapping
+    public List<ReviewDto> getReviews(
+            @RequestParam(required = false) Integer filmId,
+            @RequestParam(defaultValue = "10") int count) {
+        return reviewService.getReviews(filmId, count).stream()
+                .map(reviewMapper::toDto)
+                .toList();
     }
 
     @ResponseStatus(HttpStatus.CREATED)
@@ -44,21 +45,35 @@ public class ReviewController {
         return reviewMapper.toDto(saved);
     }
 
+    @DeleteMapping("/{id}")
+    public void deleteReview(@PathVariable int id) {
+        reviewService.deleteReview(id);
+    }
 
+    @PutMapping
+    public ReviewDto updateReview(@Validated(ValidationGroups.Update.class) @RequestBody ReviewDto reviewDto) {
+        Review review = reviewMapper.toEntity(reviewDto);
+        Review updated = reviewService.updateReview(review);
+        return reviewMapper.toDto(updated);
+    }
 
-/*  POST /reviews - Добавление нового отзыва
-    PUT /reviews - Редактирование уже нежного отзыва.
-    DELETE /reviews/{id} - Удаление уже окрашенного отзыва.
-    GET /reviews/{id} -  Получение отзыва по идентификатору.
+    @PutMapping("/{id}/like/{userId}")
+    public void addLike(@PathVariable int id, @PathVariable int userId) {
+        reviewService.addLike(id, userId);
+    }
 
-    Получение всех рецензий по идентификатору фильма, если фильм не указан все.
-    Если кол-во не указано то 10.
-    GET /reviews?filmId={filmId}&count={count}
+    @PutMapping("/{id}/dislike/{userId}")
+    public void addDislike(@PathVariable int id, @PathVariable int userId) {
+        reviewService.addDislike(id, userId);
+    }
 
-    PUT /reviews/{id}/like/{userId} — пользователь ставит лайк отзыву.
-    PUT /reviews/{id}/dislike/{userId} — пользователь ставит дизлайк отзыву.
-    DELETE /reviews/{id}/like/{userId} — пользователь удаляет лайк/дизлайк отзыву.
-    DELETE /reviews/{id}/dislike/{userId} — пользователь удаляет дизлайк отзыву
+    @DeleteMapping("/{id}/like/{userId}")
+    public void removeLike(@PathVariable int id, @PathVariable int userId) {
+        reviewService.removeRating(id, userId);
+    }
 
-    */
+    @DeleteMapping("/{id}/dislike/{userId}")
+    public void removeDislike(@PathVariable int id, @PathVariable int userId) {
+        reviewService.removeRating(id, userId);
+    }
 }

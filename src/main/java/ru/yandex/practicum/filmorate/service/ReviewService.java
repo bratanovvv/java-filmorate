@@ -26,8 +26,11 @@ public class ReviewService {
                         new ApiException(ErrorCode.REVIEW_NOT_FOUND, id));
     }
 
-    public List<Review> getReviews() {
-        return reviewRepository.getAll();
+    public List<Review> getReviews(Integer filmId, int count) {
+        if (filmId != null) {
+            filmService.getFilm(filmId);
+        }
+        return reviewRepository.findByFilmId(filmId, count);
     }
 
     @Transactional
@@ -40,5 +43,49 @@ public class ReviewService {
         log.info("Создан отзыв: id={}, filmId={}, userId={}", saved.getId(),
                 saved.getFilmId(), saved.getUserId());
         return saved;
+    }
+
+    @Transactional
+    public void deleteReview(int id) {
+        getReview(id);
+        reviewRepository.delete(id);
+    }
+
+    @Transactional
+    public Review updateReview(Review review) {
+        Review existingReview = getReview(review.getId());
+        existingReview.setContent(review.getContent());
+        existingReview.setIsPositive(review.getIsPositive());
+
+        Review updated = reviewRepository.update(existingReview);
+        log.info("Обновлён отзыв: id={}", updated.getId());
+
+        return updated;
+    }
+
+    public void addLike(int reviewId, int userId) {
+        getReview(reviewId);
+        userService.getUser(userId);
+
+        reviewRepository.addRating(reviewId, userId, true);
+        log.info("Пользователь id={} оценил отзыв id={} как полезный", userId, reviewId);
+    }
+
+    @Transactional
+    public void addDislike(int reviewId, int userId) {
+        getReview(reviewId);
+        userService.getUser(userId);
+
+        reviewRepository.addRating(reviewId, userId, false);
+        log.info("Пользователь id={} оценил отзыв id={} как бесполезный", userId, reviewId);
+    }
+
+    @Transactional
+    public void removeRating(int reviewId, int userId) {
+        getReview(reviewId);
+        userService.getUser(userId);
+
+        reviewRepository.removeRating(reviewId, userId);
+        log.info("Пользователь id={} снял оценку с отзыва id={}", userId, reviewId);
     }
 }
