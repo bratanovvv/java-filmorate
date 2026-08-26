@@ -1,5 +1,8 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
@@ -66,8 +69,12 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public List<FilmDto> getPopularFilms(@RequestParam(defaultValue = DEFAULT_POPULAR_COUNT) int count) {
-        List<Film> films = filmService.getPopularFilms(count);
+    public List<FilmDto> getPopularFilms(
+            @RequestParam(defaultValue = DEFAULT_POPULAR_COUNT) @Positive int count,
+            @RequestParam(required = false) @Positive Long genreId,
+            @RequestParam(required = false) @Min(1895) @Max(2100) Integer year
+    ) {
+        List<Film> films = filmService.popular(count, genreId, year);
         return films.stream()
                 .map(filmMapper::toDto)
                 .toList();
@@ -86,5 +93,13 @@ public class FilmController {
     @DeleteMapping("/{id}")
     public void deleteFilm(@PathVariable int id) {
         filmService.deleteFilm(id);
+    }
+
+    @GetMapping("/common")
+    public List<FilmDto> getCommonFilms(@RequestParam int userId, @RequestParam int friendId) {
+        List<Film> commonFilms = filmService.getCommonFilms(userId, friendId);
+        return commonFilms.stream()
+                .map(filmMapper::toDto)
+                .toList();
     }
 }
