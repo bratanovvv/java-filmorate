@@ -240,6 +240,30 @@ class UserServiceTest {
         assertTrue(common.isEmpty());
     }
 
+    // -------- DELETE --------
+
+    @Test
+    void shouldDeleteUser() {
+        User saved = userService.saveUser(validUser());
+
+        userService.deleteUser(saved.getId());
+
+        ApiException ex = assertThrows(
+                ApiException.class,
+                () -> userService.getUser(saved.getId())
+        );
+        assertEquals(ErrorCode.USER_NOT_FOUND, ex.getCode());
+    }
+
+    @Test
+    void shouldThrowWhenDeleteUnknownUser() {
+        ApiException ex = assertThrows(
+                ApiException.class,
+                () -> userService.deleteUser(999)
+        );
+        assertEquals(ErrorCode.USER_NOT_FOUND, ex.getCode());
+    }
+
     // -------- helper --------
 
     private User validUser() {

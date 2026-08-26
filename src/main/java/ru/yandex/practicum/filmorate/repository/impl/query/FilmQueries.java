@@ -83,4 +83,6 @@ public final class FilmQueries {
         ORDER BY likes_count DESC, f.id
         LIMIT ?
         """;
+
+    public static final String DELETE_FILM = "DELETE FROM films WHERE id = ?";
 }

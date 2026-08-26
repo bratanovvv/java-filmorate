@@ -90,6 +90,11 @@ public class FilmService {
         return films;
     }
 
+    public void deleteFilm(int id) {
+        Film film = getFilm(id);
+        filmRepository.delete(film.getId());
+    }
+
     private void validateExistingFilm(Film film) {
         if (film.getMpa() != null) {
             mpaRatingService.getMpaRating(film.getMpa().getId());

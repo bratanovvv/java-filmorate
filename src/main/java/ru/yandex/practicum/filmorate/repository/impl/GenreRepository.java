@@ -30,16 +30,21 @@ public class GenreRepository extends AbstractRepository<Integer, Genre> {
 
     @Override
     public Genre save(Genre genre) {
-        return genre;
+        throw new UnsupportedOperationException("Repository is read-only");
     }
 
     @Override
     public Genre update(Genre genre) {
-        return genre;
+        throw new UnsupportedOperationException("Repository is read-only");
     }
 
     @Override
     public List<Genre> findAllByIds(Collection<Integer> ids) {
         return findByIds(GenreQueries.FIND_ALL_BY_IDS, ids);
+    }
+
+    @Override
+    public void delete(Integer id) {
+        throw new UnsupportedOperationException("Repository is read-only");
     }
 }

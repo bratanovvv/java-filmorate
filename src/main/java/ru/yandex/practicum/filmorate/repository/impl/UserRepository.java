@@ -70,6 +70,11 @@ public class UserRepository extends AbstractRepository<Integer, User> {
         return users;
     }
 
+    @Override
+    public void delete(Integer id) {
+        deleteById(UserQueries.DELETE_USER, id);
+    }
+
     private void loadFriendsForUsers(List<User> users) {
         if (users.isEmpty()) {
             return;
