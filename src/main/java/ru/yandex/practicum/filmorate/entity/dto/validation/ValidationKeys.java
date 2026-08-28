@@ -1,8 +1,9 @@
 package ru.yandex.practicum.filmorate.entity.dto.validation;
 
+import lombok.experimental.UtilityClass;
+
+@UtilityClass
 public final class ValidationKeys {
-    private ValidationKeys() {
-    }
 
     // USER
     public static final String USER_LOGIN_NOT_BLANK = "{user.login.notBlank}";
@@ -26,6 +27,7 @@ public final class ValidationKeys {
     public static final String REVIEW_USER_ID_NOT_NULL = "{review.userId.notNull}";
     public static final String REVIEW_FILM_ID_NOT_NULL = "{review.filmId.notNull}";
 
+    //DIRECTOR
     public static final String DIRECTOR_ID_NOT_NULL = "{director.id.notNull}";
     public static final String DIRECTOR_NAME_NOT_BLANK = "{director.name.notBlank}";
 }

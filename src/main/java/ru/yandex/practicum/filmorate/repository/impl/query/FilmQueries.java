@@ -1,9 +1,9 @@
 package ru.yandex.practicum.filmorate.repository.impl.query;
 
-public final class FilmQueries {
+import lombok.experimental.UtilityClass;
 
-    private FilmQueries() {
-    }
+@UtilityClass
+public final class FilmQueries {
 
     public static final String EXISTS_BY_ID = "SELECT 1 FROM films WHERE id = ?";
 
@@ -83,7 +83,7 @@ public final class FilmQueries {
             VALUES (?, ?)
             """;
 
-    public static final String ADD_LIKE = "INSERT INTO likes (film_id, user_id) VALUES (?, ?)";
+    public static final String ADD_LIKE = "MERGE INTO likes (film_id, user_id) KEY(film_id, user_id) VALUES (?, ?)";
 
     public static final String DELETE_LIKE = "DELETE FROM likes WHERE film_id = ? AND user_id = ?";
 

@@ -85,11 +85,11 @@ public class FilmRepository extends AbstractRepository<Integer, Film> {
     }
 
     public void addLike(Integer filmId, Integer userId) {
-        executeUpdate(FilmQueries.ADD_LIKE, filmId, userId);
+        executeUpdate(true, FilmQueries.ADD_LIKE, filmId, userId);
     }
 
     public void removeLike(Integer filmId, Integer userId) {
-        deleteById(FilmQueries.DELETE_LIKE, filmId, userId);
+        executeUpdate(true, FilmQueries.DELETE_LIKE, filmId, userId);
     }
 
     public List<Film> getPopularFilms(int count) {
@@ -107,35 +107,32 @@ public class FilmRepository extends AbstractRepository<Integer, Film> {
         return films;
     }
 
-    public void loadFilmsLinkedEntities(List<Film> films) {
-        loadGenresForFilms(films);
-        loadDirectorsForFilms(films);
-        loadLikesForFilms(films);
-    }
-
     public List<Film> findPopularByGenreAndYear(int count, Long genreId, Integer year) {
         List<Film> films = findAll(FilmQueries.FIND_POPULAR_BY_GENRE_AND_YEAR,
                 genreId, genreId,
                 year, year,
                 count
         );
-        loadGenresForFilms(films);
-        loadLikesForFilms(films);
+        loadFilmsLinkedEntities(films);
         return films;
     }
 
     public List<Film> getCommonFilms(int userId, int friendId) {
         List<Film> films = findAll(FilmQueries.COMMON_FILMS, userId, friendId);
-        loadGenresForFilms(films);
-        loadLikesForFilms(films);
+        loadFilmsLinkedEntities(films);
         return films;
     }
 
     public List<Film> getUserRecommendations(Integer userId) {
         List<Film> films = findAll(FilmQueries.FIND_RECOMMENDATIONS, userId, userId, userId);
-        loadGenresForFilms(films);
-        loadLikesForFilms(films);
+        loadFilmsLinkedEntities(films);
         return films;
+    }
+
+    private void loadFilmsLinkedEntities(List<Film> films) {
+        loadGenresForFilms(films);
+        loadDirectorsForFilms(films);
+        loadLikesForFilms(films);
     }
 
     private void loadGenresForFilms(List<Film> films) {
