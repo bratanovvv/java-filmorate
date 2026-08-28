@@ -83,7 +83,10 @@ public final class FilmQueries {
             VALUES (?, ?)
             """;
 
-    public static final String ADD_LIKE = "INSERT INTO likes (film_id, user_id) VALUES (?, ?)";
+    public static final String ADD_LIKE = """
+            MERGE INTO likes (film_id, user_id) KEY(film_id, user_id)
+            VALUES (?, ?)
+            """;
 
     public static final String DELETE_LIKE = "DELETE FROM likes WHERE film_id = ? AND user_id = ?";
 
@@ -102,6 +105,21 @@ public final class FilmQueries {
             LEFT JOIN mpa_ratings m ON f.mpa_rating_id = m.id
             LEFT JOIN film_directors fd ON f.id = fd.film_id
             WHERE fd.director_id = ?
+            ORDER BY (SELECT COUNT(*) FROM likes l WHERE l.film_id = f.id) DESC, f.id ASC
+            """;
+
+    public static final String SEARCH = """
+            SELECT f.*, m.name AS mpa_name
+            FROM films f
+            LEFT JOIN mpa_ratings m ON f.mpa_rating_id = m.id
+            WHERE LOWER(f.name) LIKE LOWER(?)
+               OR EXISTS (
+                   SELECT 1
+                   FROM film_directors fd
+                   JOIN directors d ON d.id = fd.director_id
+                   WHERE fd.film_id = f.id
+                     AND LOWER(d.name) LIKE LOWER(?)
+               )
             ORDER BY (SELECT COUNT(*) FROM likes l WHERE l.film_id = f.id) DESC, f.id ASC
             """;
 

@@ -85,11 +85,11 @@ public class FilmRepository extends AbstractRepository<Integer, Film> {
     }
 
     public void addLike(Integer filmId, Integer userId) {
-        executeUpdate(FilmQueries.ADD_LIKE, filmId, userId);
+        jdbc.update(FilmQueries.ADD_LIKE, filmId, userId);
     }
 
     public void removeLike(Integer filmId, Integer userId) {
-        deleteById(FilmQueries.DELETE_LIKE, filmId, userId);
+        jdbc.update(FilmQueries.DELETE_LIKE, filmId, userId);
     }
 
     public List<Film> getPopularFilms(int count) {
@@ -103,6 +103,16 @@ public class FilmRepository extends AbstractRepository<Integer, Film> {
             case year -> findAll(FilmQueries.FIND_BY_DIRECTOR_ORDER_BY_YEAR, directorId);
             case likes -> findAll(FilmQueries.FIND_BY_DIRECTOR_ORDER_BY_LIKES, directorId);
         };
+        loadFilmsLinkedEntities(films);
+        return films;
+    }
+
+    /**
+     * Ищет фильмы по подстроке. Каждый из шаблонов включает свою ветку поиска;
+     * {@code null} эту ветку отключает.
+     */
+    public List<Film> searchFilms(String titlePattern, String directorPattern) {
+        List<Film> films = findAll(FilmQueries.SEARCH, titlePattern, directorPattern);
         loadFilmsLinkedEntities(films);
         return films;
     }
