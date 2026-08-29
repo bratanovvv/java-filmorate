@@ -1,9 +1,9 @@
 package ru.yandex.practicum.filmorate.repository.impl.query;
 
-public final class GenreQueries {
+import lombok.experimental.UtilityClass;
 
-    private GenreQueries() {
-    }
+@UtilityClass
+public final class GenreQueries {
 
     public static final String FIND_ALL = "SELECT * FROM genres ORDER BY id";
     public static final String FIND_BY_ID = "SELECT * FROM genres WHERE id = ?";

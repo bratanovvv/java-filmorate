@@ -330,11 +330,10 @@ class FilmServiceTest {
         // film3 - 1 лайк
         filmService.addLike(film3.getId(), user1.getId());
 
-        // film4 - 4 лайка (самый популярный, но не подходит по жанру)
+        // film4 - 3 лайка (самый популярный, но не подходит по жанру)
         filmService.addLike(film4.getId(), user1.getId());
         filmService.addLike(film4.getId(), user2.getId());
         filmService.addLike(film4.getId(), user3.getId());
-        filmService.addLike(film4.getId(), user1.getId()); // дублируем, чтобы было больше
 
         // Получаем популярные фильмы: Комедия (genreId=1) за 2001 год
         List<Film> popular = filmService.popular(10, 1L, 2001);

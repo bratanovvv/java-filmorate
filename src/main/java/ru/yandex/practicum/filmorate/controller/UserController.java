@@ -12,8 +12,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import ru.yandex.practicum.filmorate.entity.dao.Event;
 import ru.yandex.practicum.filmorate.entity.dao.Film;
 import ru.yandex.practicum.filmorate.entity.dao.User;
+import ru.yandex.practicum.filmorate.entity.dto.FeedEventDto;
 import ru.yandex.practicum.filmorate.entity.dto.FilmDto;
 import ru.yandex.practicum.filmorate.entity.dto.UserDto;
 import ru.yandex.practicum.filmorate.entity.dto.validation.ValidationGroups;
@@ -32,6 +34,7 @@ public class UserController {
     private final FilmService filmService;
     private final Mapper<UserDto, User> userMapper;
     private final Mapper<FilmDto, Film> filmMapper;
+    private final Mapper<FeedEventDto, Event> feedEventMapper;
 
     @GetMapping("/{id}")
     public UserDto getUser(@PathVariable int id) {
@@ -102,6 +105,13 @@ public class UserController {
         List<Film> films = filmService.getRecommendations(id);
         return films.stream()
                 .map(filmMapper::toDto)
+                .toList();
+    }
+
+    @GetMapping("/{id}/feed")
+    public List<FeedEventDto> getFeed(@PathVariable int id) {
+        return userService.getUserFeed(id).stream()
+                .map(feedEventMapper::toDto)
                 .toList();
     }
 }
