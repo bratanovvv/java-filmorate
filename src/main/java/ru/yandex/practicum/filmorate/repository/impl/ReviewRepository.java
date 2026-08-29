@@ -63,11 +63,11 @@ public class ReviewRepository extends AbstractRepository<Integer, Review> {
     }
 
     public void addRating(int reviewId, int userId, boolean isLike) {
-        executeUpdate(true, ReviewQueries.MERGE_RATING, reviewId, userId, isLike);
+        executeUpdateIgnoringResult(ReviewQueries.MERGE_RATING, reviewId, userId, isLike);
     }
 
     public void removeRating(int reviewId, int userId) {
-        executeUpdate(true, ReviewQueries.DELETE_RATING, reviewId, userId);
+        executeUpdateIgnoringResult(ReviewQueries.DELETE_RATING, reviewId, userId);
     }
 
     public boolean existsById(int reviewId) {

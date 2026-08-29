@@ -8,6 +8,7 @@ import ru.yandex.practicum.filmorate.entity.dao.util.EventOperation;
 import ru.yandex.practicum.filmorate.entity.dao.util.EventType;
 import ru.yandex.practicum.filmorate.repository.impl.EventRepository;
 
+import java.time.Instant;
 import java.util.List;
 
 @Slf4j
@@ -23,7 +24,7 @@ public class EventService {
         event.setEntityId(entityId);
         event.setEventType(eventType);
         event.setOperation(operation);
-        event.setTimestamp(System.currentTimeMillis());
+        event.setTimestamp(Instant.now().toEpochMilli());
 
         Event saved = eventRepository.save(event);
         log.info("Записано событие: id={}, type={}, operation={}, userId={}, entityId={}",

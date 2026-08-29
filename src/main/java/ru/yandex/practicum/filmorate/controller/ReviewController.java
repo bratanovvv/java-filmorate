@@ -42,9 +42,7 @@ public class ReviewController {
     public List<ReviewDto> getReviews(
             @RequestParam(required = false) Integer filmId,
             @RequestParam(defaultValue = "10") @Positive int count) {
-        return reviewService.getReviews(filmId, count).stream()
-                .map(reviewMapper::toDto)
-                .toList();
+        return reviewMapper.toDtoList(reviewService.getReviews(filmId, count));
     }
 
     @ResponseStatus(HttpStatus.CREATED)
@@ -56,6 +54,7 @@ public class ReviewController {
         return reviewMapper.toDto(saved);
     }
 
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{id}")
     public void deleteReview(@PathVariable int id) {
         reviewService.deleteReview(id);

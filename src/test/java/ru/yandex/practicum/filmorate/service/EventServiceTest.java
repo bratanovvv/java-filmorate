@@ -14,6 +14,7 @@ import ru.yandex.practicum.filmorate.exception.ErrorCode;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -31,7 +32,7 @@ class EventServiceTest {
     private UserService userService;
 
     @Test
-    void shouldCombineOwnAndFriendsEvents() {
+    void shouldReturnOnlyOwnEvents() {
         User owner = userService.saveUser(validUser());
         User friend = userService.saveUser(validUser());
         User stranger = userService.saveUser(validUser());
@@ -42,10 +43,11 @@ class EventServiceTest {
 
         List<Event> feed = userService.getUserFeed(owner.getId());
 
-        assertThat(feed).hasSize(2);
+        assertThat(feed).hasSize(1);
         assertThat(feed)
-                .extracting(Event::getUserId)
-                .containsExactlyInAnyOrder(owner.getId(), friend.getId());
+                .singleElement()
+                .satisfies(e -> assertThat(e.getUserId()).isEqualTo(owner.getId()));
+        assertThat(feed).noneMatch(e -> e.getUserId().equals(friend.getId()));
         assertThat(feed).noneMatch(e -> e.getUserId().equals(stranger.getId()));
     }
 
@@ -67,7 +69,7 @@ class EventServiceTest {
 
     private User validUser() {
         User user = new User();
-        user.setEmail("test@mail.com");
+        user.setEmail("test-" + UUID.randomUUID() + "@mail.com");
         user.setLogin("testlogin");
         user.setName("Test User");
         user.setBirthday(LocalDate.of(2000, 1, 1));

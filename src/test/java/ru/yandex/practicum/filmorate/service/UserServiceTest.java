@@ -11,6 +11,7 @@ import ru.yandex.practicum.filmorate.entity.dao.User;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -268,7 +269,7 @@ class UserServiceTest {
 
     private User validUser() {
         User user = new User();
-        user.setEmail("test@mail.com");
+        user.setEmail("test-" + UUID.randomUUID() + "@mail.com");
         user.setLogin("testlogin");
         user.setName("Test User");
         user.setBirthday(LocalDate.of(2000, 1, 1));

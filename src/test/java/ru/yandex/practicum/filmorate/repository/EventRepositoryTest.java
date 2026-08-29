@@ -15,6 +15,7 @@ import ru.yandex.practicum.filmorate.repository.impl.UserRepository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -46,22 +47,23 @@ class EventRepositoryTest {
     }
 
     @Test
-    void shouldReturnOwnAndFriendsEventsOnly() {
+    void shouldReturnOnlyOwnEvents() {
         User owner = userRepository.save(validUser());
         User friend = userRepository.save(validUser());
         User stranger = userRepository.save(validUser());
 
         makeFriends(owner.getId(), friend.getId());
 
-        Event own = eventRepository.save(event(EventType.FRIEND, EventOperation.ADD, owner.getId(), friend.getId(), 1L));
-        Event friendEvent = eventRepository.save(event(EventType.LIKE, EventOperation.ADD, friend.getId(), 5, 2L));
+        eventRepository.save(event(EventType.FRIEND, EventOperation.ADD, owner.getId(), friend.getId(), 1L));
+        eventRepository.save(event(EventType.LIKE, EventOperation.ADD, friend.getId(), 5, 2L));
         eventRepository.save(event(EventType.REVIEW, EventOperation.ADD, stranger.getId(), 7, 3L));
 
         List<Event> feed = eventRepository.findFeedForUser(owner.getId());
 
         assertThat(feed)
-                .extracting(Event::getId)
-                .containsExactlyInAnyOrder(own.getId(), friendEvent.getId());
+                .singleElement()
+                .satisfies(e -> assertThat(e.getUserId()).isEqualTo(owner.getId()));
+        assertThat(feed).noneMatch(e -> e.getUserId().equals(friend.getId()));
         assertThat(feed).noneMatch(e -> e.getUserId().equals(stranger.getId()));
     }
 
@@ -100,7 +102,7 @@ class EventRepositoryTest {
 
     private User validUser() {
         User user = new User();
-        user.setEmail("test@mail.com");
+        user.setEmail("test-" + UUID.randomUUID() + "@mail.com");
         user.setLogin("testlogin");
         user.setName("Test User");
         user.setBirthday(LocalDate.of(2000, 1, 1));

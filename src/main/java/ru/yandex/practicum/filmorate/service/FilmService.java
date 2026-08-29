@@ -45,10 +45,9 @@ public class FilmService {
     @Transactional
     public Film saveFilm(Film film) {
         validateExistingFilm(film);
+
         Film saved = filmRepository.save(film);
-
         log.info("Создан фильм: id={}, name={}", saved.getId(), saved.getName());
-
         return saved;
     }
 
@@ -66,9 +65,9 @@ public class FilmService {
         existingFilm.getGenres().addAll(film.getGenres());
         existingFilm.getDirectors().clear();
         existingFilm.getDirectors().addAll(film.getDirectors());
+
         Film updated = filmRepository.update(existingFilm);
         log.info("Обновлён фильм: id={}, name={}", updated.getId(), updated.getName());
-
         return updated;
     }
 
@@ -94,11 +93,7 @@ public class FilmService {
 
     public List<Film> popular(int count, Long genreId, Integer year) {
         log.info("Запрос популярных фильмов: count={}, genreId={}, year={}", count, genreId, year);
-
-        List<Film> films;
-        films = filmRepository.findPopularByGenreAndYear(count, genreId, year);
-
-        return films;
+        return filmRepository.findPopularByGenreAndYear(count, genreId, year);
     }
 
     public List<Film> getFilmsByDirector(int directorId, FilmSortOption sortBy) {

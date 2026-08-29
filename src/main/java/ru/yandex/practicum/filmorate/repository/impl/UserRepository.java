@@ -6,8 +6,8 @@ import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.entity.dao.User;
 import ru.yandex.practicum.filmorate.repository.AbstractRepository;
 import ru.yandex.practicum.filmorate.repository.impl.query.UserQueries;
+import ru.yandex.practicum.filmorate.repository.util.SqlDates;
 
-import java.sql.Date;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +41,7 @@ public class UserRepository extends AbstractRepository<Integer, User> {
                 user.getEmail(),
                 user.getLogin(),
                 user.getName(),
-                user.getBirthday() != null ? Date.valueOf(user.getBirthday()) : null);
+                SqlDates.toSqlDate(user.getBirthday()));
         user.setId(id);
         return user;
     }
@@ -52,7 +52,7 @@ public class UserRepository extends AbstractRepository<Integer, User> {
                 user.getEmail(),
                 user.getLogin(),
                 user.getName(),
-                user.getBirthday() != null ? Date.valueOf(user.getBirthday()) : null,
+                SqlDates.toSqlDate(user.getBirthday()),
                 user.getId());
         jdbc.update(UserQueries.DELETE_FRIENDS, user.getId());
         saveFriends(user);

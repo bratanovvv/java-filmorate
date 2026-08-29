@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.entity.dao.Genre;
 import ru.yandex.practicum.filmorate.exception.ApiException;
@@ -13,6 +14,7 @@ import ru.yandex.practicum.filmorate.entity.dao.User;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -30,6 +32,15 @@ class FilmServiceTest {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private JdbcTemplate jdbc;
+
+    private int likeCount(int filmId) {
+        Integer count = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM likes WHERE film_id = ?", Integer.class, filmId);
+        return count != null ? count : 0;
+    }
 
     // -------- CREATE --------
 
@@ -132,9 +143,7 @@ class FilmServiceTest {
 
         filmService.addLike(film.getId(), user.getId());
 
-        Film likedFilm = filmService.getFilm(film.getId());
-        assertEquals(1, likedFilm.getLikes().size());
-        assertTrue(likedFilm.getLikes().contains(user.getId()));
+        assertEquals(1, likeCount(film.getId()));
     }
 
     @Test
@@ -145,8 +154,7 @@ class FilmServiceTest {
         filmService.addLike(film.getId(), user.getId());
         filmService.addLike(film.getId(), user.getId());
 
-        Film likedFilm = filmService.getFilm(film.getId());
-        assertEquals(1, likedFilm.getLikes().size());
+        assertEquals(1, likeCount(film.getId()));
     }
 
     @Test
@@ -157,8 +165,7 @@ class FilmServiceTest {
 
         filmService.removeLike(film.getId(), user.getId());
 
-        Film likedFilm = filmService.getFilm(film.getId());
-        assertTrue(likedFilm.getLikes().isEmpty());
+        assertEquals(0, likeCount(film.getId()));
     }
 
     @Test
@@ -168,8 +175,7 @@ class FilmServiceTest {
 
         filmService.removeLike(film.getId(), user.getId());
 
-        Film likedFilm = filmService.getFilm(film.getId());
-        assertTrue(likedFilm.getLikes().isEmpty());
+        assertEquals(0, likeCount(film.getId()));
     }
 
     @Test
@@ -678,7 +684,7 @@ class FilmServiceTest {
 
     private User validUser() {
         User user = new User();
-        user.setEmail("test@mail.com");
+        user.setEmail("test-" + UUID.randomUUID() + "@mail.com");
         user.setLogin("testlogin");
         user.setName("Test User");
         user.setBirthday(LocalDate.of(2000, 1, 1));

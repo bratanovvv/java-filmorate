@@ -35,10 +35,7 @@ public class FilmController {
 
     @GetMapping
     public List<FilmDto> getFilms() {
-        List<Film> films = filmService.getFilms();
-        return films.stream()
-                .map(filmMapper::toDto)
-                .toList();
+        return filmMapper.toDtoList(filmService.getFilms());
     }
 
     @ResponseStatus(HttpStatus.CREATED)
@@ -57,13 +54,11 @@ public class FilmController {
         return filmMapper.toDto(updated);
     }
 
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     @PutMapping("/{id}/like/{userId}")
     public void addLike(@PathVariable int id, @PathVariable int userId) {
         filmService.addLike(id, userId);
     }
 
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{id}/like/{userId}")
     public void removeLike(@PathVariable int id, @PathVariable int userId) {
         filmService.removeLike(id, userId);
@@ -75,19 +70,13 @@ public class FilmController {
             @RequestParam(required = false) @Positive Long genreId,
             @RequestParam(required = false) @Min(1895) @Max(2100) Integer year
     ) {
-        List<Film> films = filmService.popular(count, genreId, year);
-        return films.stream()
-                .map(filmMapper::toDto)
-                .toList();
+        return filmMapper.toDtoList(filmService.popular(count, genreId, year));
     }
 
     @GetMapping("/director/{directorId}")
     public List<FilmDto> getDirectorFilms(@PathVariable int directorId,
                                           @RequestParam(defaultValue = "year") FilmSortOption sortBy) {
-        List<Film> films = filmService.getFilmsByDirector(directorId, sortBy);
-        return films.stream()
-                .map(filmMapper::toDto)
-                .toList();
+        return filmMapper.toDtoList(filmService.getFilmsByDirector(directorId, sortBy));
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -98,18 +87,12 @@ public class FilmController {
 
     @GetMapping("/common")
     public List<FilmDto> getCommonFilms(@RequestParam int userId, @RequestParam int friendId) {
-        List<Film> commonFilms = filmService.getCommonFilms(userId, friendId);
-        return commonFilms.stream()
-                .map(filmMapper::toDto)
-                .toList();
+        return filmMapper.toDtoList(filmService.getCommonFilms(userId, friendId));
     }
 
     @GetMapping("/search")
     public List<FilmDto> searchFilms(@RequestParam(required = false) String query,
                                      @RequestParam(defaultValue = "title") String by) {
-        List<Film> films = filmService.search(query, by);
-        return films.stream()
-                .map(filmMapper::toDto)
-                .toList();
+        return filmMapper.toDtoList(filmService.search(query, by));
     }
 }

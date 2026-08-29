@@ -15,6 +15,7 @@ public final class UserQueries {
             SELECT user_id, friend_id
             FROM friendships
             WHERE user_id IN (%s)
+            ORDER BY user_id, friend_id
             """;
 
     public static final String INSERT = """

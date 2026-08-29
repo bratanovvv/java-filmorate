@@ -66,18 +66,18 @@ public abstract class AbstractRepository<K, V> implements Repository<K, V> {
      * бросает {@code ApiException(UPDATE_FAILED)}, если затронуто 0 строк.
      */
     protected void executeUpdate(String query, Object... params) {
-       executeUpdate(false, query, params);
+        int rowsUpdated = jdbc.update(query, params);
+        if (rowsUpdated == 0) {
+            throw new ApiException(ErrorCode.UPDATE_FAILED);
+        }
     }
 
     /**
-     * Выполняет UPDATE;
-     * бросает {@code ApiException(UPDATE_FAILED)}, если затронуто 0 строк.
+     * Выполняет UPDATE, не проверяя количество затронутых строк
+     * (для идемпотентных операций: upsert, повторное удаление и т.п.).
      */
-    protected void executeUpdate(boolean force, String query, Object... params) {
-        int rowsUpdated = jdbc.update(query, params);
-        if (!force && rowsUpdated == 0) {
-            throw new ApiException(ErrorCode.UPDATE_FAILED);
-        }
+    protected void executeUpdateIgnoringResult(String query, Object... params) {
+        jdbc.update(query, params);
     }
 
     /**

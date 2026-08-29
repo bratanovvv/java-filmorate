@@ -14,7 +14,6 @@ public final class EventQueries {
             SELECT id, user_id, entity_id, event_type, operation, created_at
             FROM events
             WHERE user_id = ?
-               OR user_id IN (SELECT friend_id FROM friendships WHERE user_id = ?)
-            ORDER BY created_at ASC, id DESC
+            ORDER BY created_at ASC, id ASC
             """;
 }

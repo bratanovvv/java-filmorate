@@ -10,8 +10,8 @@ import ru.yandex.practicum.filmorate.entity.dao.util.FilmSortOption;
 import ru.yandex.practicum.filmorate.entity.dao.util.SearchTarget;
 import ru.yandex.practicum.filmorate.repository.AbstractRepository;
 import ru.yandex.practicum.filmorate.repository.impl.query.FilmQueries;
+import ru.yandex.practicum.filmorate.repository.util.SqlDates;
 
-import java.sql.Date;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -45,13 +45,14 @@ public class FilmRepository extends AbstractRepository<Integer, Film> {
         int id = insert(FilmQueries.INSERT,
                 film.getName(),
                 film.getDescription(),
-                film.getReleaseDate() != null ? Date.valueOf(film.getReleaseDate()) : null,
+                SqlDates.toSqlDate(film.getReleaseDate()),
                 film.getDuration(),
                 film.getMpa() != null ? film.getMpa().getId() : null);
         film.setId(id);
         saveGenres(film);
         saveDirectors(film);
-        return film;
+
+        return getById(film.getId()).orElseThrow();
     }
 
     @Override
@@ -59,15 +60,16 @@ public class FilmRepository extends AbstractRepository<Integer, Film> {
         executeUpdate(FilmQueries.UPDATE,
                 film.getName(),
                 film.getDescription(),
-                film.getReleaseDate() != null ? Date.valueOf(film.getReleaseDate()) : null,
+                SqlDates.toSqlDate(film.getReleaseDate()),
                 film.getDuration(),
                 film.getMpa() != null ? film.getMpa().getId() : null,
                 film.getId());
-        jdbc.update(FilmQueries.DELETE_GENRES, film.getId());
-        jdbc.update(FilmQueries.DELETE_DIRECTORS, film.getId());
+        executeUpdateIgnoringResult(FilmQueries.DELETE_GENRES, film.getId());
+        executeUpdateIgnoringResult(FilmQueries.DELETE_DIRECTORS, film.getId());
         saveGenres(film);
         saveDirectors(film);
-        return film;
+
+        return getById(film.getId()).orElseThrow();
     }
 
     @Override
@@ -87,17 +89,11 @@ public class FilmRepository extends AbstractRepository<Integer, Film> {
     }
 
     public void addLike(Integer filmId, Integer userId) {
-        executeUpdate(true, FilmQueries.ADD_LIKE, filmId, userId);
+        executeUpdateIgnoringResult(FilmQueries.ADD_LIKE, filmId, userId);
     }
 
     public void removeLike(Integer filmId, Integer userId) {
-        executeUpdate(true, FilmQueries.DELETE_LIKE, filmId, userId);
-    }
-
-    public List<Film> getPopularFilms(int count) {
-        List<Film> films = findAll(FilmQueries.FIND_POPULAR, count);
-        loadFilmsLinkedEntities(films);
-        return films;
+        executeUpdateIgnoringResult(FilmQueries.DELETE_LIKE, filmId, userId);
     }
 
     public List<Film> getFilmsByDirector(Integer directorId, FilmSortOption sortBy) {
@@ -109,10 +105,6 @@ public class FilmRepository extends AbstractRepository<Integer, Film> {
         return films;
     }
 
-    /**
-     * Ищет фильмы по подстроке в полях, перечисленных в {@code targets}.
-     * Поле, которого нет в наборе, в поиске не участвует.
-     */
     public List<Film> searchFilms(String query, Set<SearchTarget> targets) {
         String pattern = "%" + query + "%";
         List<Film> films = findAll(FilmQueries.SEARCH,
@@ -147,7 +139,6 @@ public class FilmRepository extends AbstractRepository<Integer, Film> {
     private void loadFilmsLinkedEntities(List<Film> films) {
         loadGenresForFilms(films);
         loadDirectorsForFilms(films);
-        loadLikesForFilms(films);
     }
 
     private void loadGenresForFilms(List<Film> films) {
@@ -198,28 +189,6 @@ public class FilmRepository extends AbstractRepository<Integer, Film> {
                 director.setId(directorId);
                 director.setName(directorName);
                 film.getDirectors().add(director);
-            }
-        }, filmIds.toArray());
-    }
-
-    private void loadLikesForFilms(List<Film> films) {
-        if (films.isEmpty()) {
-            return;
-        }
-
-        List<Integer> filmIds = films.stream().map(Film::getId).toList();
-        String placeholders = filmIds.stream().map(id -> "?").collect(Collectors.joining(","));
-        String query = FilmQueries.FIND_LIKES_BY_FILM_IDS.formatted(placeholders);
-
-        Map<Integer, Film> filmMap = films.stream()
-                .collect(Collectors.toMap(Film::getId, f -> f));
-
-        jdbc.query(query, rs -> {
-            int filmId = rs.getInt("film_id");
-            int userId = rs.getInt("user_id");
-            Film film = filmMap.get(filmId);
-            if (film != null) {
-                film.getLikes().add(userId);
             }
         }, filmIds.toArray());
     }

@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.Setter;
 
 import java.time.LocalDate;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 @Data
@@ -18,5 +18,5 @@ public class User {
     private LocalDate birthday;
 
     @Setter(AccessLevel.NONE)
-    private Set<Integer> friends = new HashSet<>();
+    private Set<Integer> friends = new LinkedHashSet<>();
 }

@@ -20,14 +20,6 @@ public final class FilmQueries {
             WHERE f.id = ?
             """;
 
-    public static final String FIND_POPULAR = """
-            SELECT f.*, m.name AS mpa_name
-            FROM films f
-            LEFT JOIN mpa_ratings m ON f.mpa_rating_id = m.id
-            ORDER BY (SELECT COUNT(*) FROM likes l WHERE l.film_id = f.id) DESC, f.id ASC
-            LIMIT ?
-            """;
-
     public static final String FIND_ALL_BY_IDS = """
             SELECT f.*, m.name AS mpa_name
             FROM films f
@@ -40,6 +32,7 @@ public final class FilmQueries {
             FROM film_genres fg
             JOIN genres g ON fg.genre_id = g.id
             WHERE fg.film_id IN (%s)
+            ORDER BY fg.film_id, g.id
             """;
 
     public static final String FIND_DIRECTORS_BY_FILM_IDS = """
@@ -47,12 +40,7 @@ public final class FilmQueries {
             FROM film_directors fd
             JOIN directors d ON fd.director_id = d.id
             WHERE fd.film_id IN (%s)
-            """;
-
-    public static final String FIND_LIKES_BY_FILM_IDS = """
-            SELECT film_id, user_id
-            FROM likes
-            WHERE film_id IN (%s)
+            ORDER BY fd.film_id, d.id
             """;
 
     public static final String INSERT = """

@@ -44,10 +44,7 @@ public class UserController {
 
     @GetMapping
     public List<UserDto> getUsers() {
-        List<User> users = userService.getUsers();
-        return users.stream()
-                .map(userMapper::toDto)
-                .toList();
+        return userMapper.toDtoList(userService.getUsers());
     }
 
     @ResponseStatus(HttpStatus.CREATED)
@@ -80,18 +77,12 @@ public class UserController {
 
     @GetMapping("/{id}/friends")
     public List<UserDto> getUserFriends(@PathVariable int id) {
-        List<User> friends = userService.getUserFriends(id);
-        return friends.stream()
-                .map(userMapper::toDto)
-                .toList();
+        return userMapper.toDtoList(userService.getUserFriends(id));
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")
     public List<UserDto> getCommonFriends(@PathVariable int id, @PathVariable int otherId) {
-        List<User> commonFriends = userService.getCommonFriends(id, otherId);
-        return commonFriends.stream()
-                .map(userMapper::toDto)
-                .toList();
+        return userMapper.toDtoList(userService.getCommonFriends(id, otherId));
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -102,10 +93,7 @@ public class UserController {
 
     @GetMapping("/{id}/recommendations")
     public List<FilmDto> getRecommendations(@PathVariable int id) {
-        List<Film> films = filmService.getRecommendations(id);
-        return films.stream()
-                .map(filmMapper::toDto)
-                .toList();
+        return filmMapper.toDtoList(filmService.getRecommendations(id));
     }
 
     @GetMapping("/{id}/feed")

@@ -36,10 +36,7 @@ public class DirectorController {
 
     @GetMapping
     public List<DirectorDto> getDirectors() {
-        List<Director> directors = directorService.getDirectors();
-        return directors.stream()
-                .map(directorMapper::toDto)
-                .toList();
+        return directorMapper.toDtoList(directorService.getDirectors());
     }
 
     @ResponseStatus(HttpStatus.CREATED)

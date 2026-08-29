@@ -30,7 +30,7 @@ public class EventRepository extends AbstractRepository<Integer, Event> {
     }
 
     public List<Event> findFeedForUser(int userId) {
-        return findAll(EventQueries.FIND_FEED, userId, userId);
+        return findAll(EventQueries.FIND_FEED, userId);
     }
 
     @Override
