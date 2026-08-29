@@ -22,10 +22,7 @@ public class GenreController {
 
     @GetMapping
     public List<GenreDto> getGenres() {
-        List<Genre> genres = genreService.getGenres();
-        return genres.stream()
-                .map(genreMapper::toDto)
-                .toList();
+        return genreMapper.toDtoList(genreService.getGenres());
     }
 
     @GetMapping("/{id}")

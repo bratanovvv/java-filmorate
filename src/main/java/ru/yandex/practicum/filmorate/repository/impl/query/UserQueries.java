@@ -1,18 +1,21 @@
 package ru.yandex.practicum.filmorate.repository.impl.query;
 
-public final class UserQueries {
+import lombok.experimental.UtilityClass;
 
-    private UserQueries() {
-    }
+@UtilityClass
+public final class UserQueries {
 
     public static final String FIND_ALL = "SELECT * FROM users";
     public static final String FIND_BY_ID = "SELECT * FROM users WHERE id = ?";
     public static final String FIND_ALL_BY_IDS = "SELECT * FROM users WHERE id IN (%s)";
 
+    public static final String EXISTS_BY_ID = "SELECT 1 FROM users WHERE id = ?";
+
     public static final String FIND_FRIENDS_BY_USER_IDS = """
             SELECT user_id, friend_id
             FROM friendships
             WHERE user_id IN (%s)
+            ORDER BY user_id, friend_id
             """;
 
     public static final String INSERT = """
@@ -24,6 +27,9 @@ public final class UserQueries {
             UPDATE users
             SET email = ?, login = ?, name = ?, birthday = ?
             WHERE id = ?
+            """;
+    public static final String DELETE = """
+            DELETE FROM users WHERE id = ?
             """;
 
     public static final String DELETE_FRIENDS = "DELETE FROM friendships WHERE user_id = ?";

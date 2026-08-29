@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.Setter;
 
 import java.time.LocalDate;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 @Data
@@ -18,8 +18,8 @@ public class Film {
     private MpaRating mpa;
 
     @Setter(AccessLevel.NONE)
-    private Set<Integer> likes = new HashSet<>();
+    private Set<Genre> genres = new LinkedHashSet<>();
 
     @Setter(AccessLevel.NONE)
-    private Set<Genre> genres = new HashSet<>();
+    private Set<Director> directors = new LinkedHashSet<>();
 }

@@ -5,6 +5,7 @@ import ru.yandex.practicum.filmorate.entity.dao.Film;
 import ru.yandex.practicum.filmorate.entity.dto.FilmDto;
 import ru.yandex.practicum.filmorate.entity.mapper.Mapper;
 
+import java.util.LinkedHashSet;
 import java.util.stream.Collectors;
 
 @Component
@@ -12,10 +13,12 @@ public class FilmMapper implements Mapper<FilmDto, Film> {
 
     private final MpaRatingMapper mpaRatingMapper;
     private final GenreMapper genreMapper;
+    private final DirectorMapper directorMapper;
 
-    public FilmMapper(MpaRatingMapper mpaRatingMapper, GenreMapper genreMapper) {
+    public FilmMapper(MpaRatingMapper mpaRatingMapper, GenreMapper genreMapper, DirectorMapper directorMapper) {
         this.mpaRatingMapper = mpaRatingMapper;
         this.genreMapper = genreMapper;
+        this.directorMapper = directorMapper;
     }
 
     @Override
@@ -32,7 +35,10 @@ public class FilmMapper implements Mapper<FilmDto, Film> {
         dto.setMpa(mpaRatingMapper.toDto(film.getMpa()));
         dto.setGenres(film.getGenres().stream()
                 .map(genreMapper::toDto)
-                .collect(Collectors.toSet()));
+                .collect(Collectors.toCollection(LinkedHashSet::new)));
+        dto.setDirectors(film.getDirectors().stream()
+                .map(directorMapper::toDto)
+                .collect(Collectors.toCollection(LinkedHashSet::new)));
         return dto;
     }
 
@@ -50,7 +56,10 @@ public class FilmMapper implements Mapper<FilmDto, Film> {
         film.setMpa(mpaRatingMapper.toEntity(dto.getMpa()));
         film.getGenres().addAll(dto.getGenres().stream()
                 .map(genreMapper::toEntity)
-                .collect(Collectors.toSet()));
+                .collect(Collectors.toCollection(LinkedHashSet::new)));
+        film.getDirectors().addAll(dto.getDirectors().stream()
+                .map(directorMapper::toEntity)
+                .collect(Collectors.toCollection(LinkedHashSet::new)));
         return film;
     }
 }

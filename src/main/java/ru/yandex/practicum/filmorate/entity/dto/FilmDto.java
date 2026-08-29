@@ -10,7 +10,7 @@ import ru.yandex.practicum.filmorate.entity.dto.validation.annotation.MinDate;
 import ru.yandex.practicum.filmorate.entity.dto.validation.ValidationGroups;
 
 import java.time.LocalDate;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 @Data
@@ -38,5 +38,6 @@ public class FilmDto {
 
     private MpaRatingDto mpa;
 
-    private Set<GenreDto> genres = new HashSet<>();
+    private Set<GenreDto> genres = new LinkedHashSet<>();
+    private Set<DirectorDto> directors = new LinkedHashSet<>();
 }

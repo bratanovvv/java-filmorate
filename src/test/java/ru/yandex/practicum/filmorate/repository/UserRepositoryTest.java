@@ -12,6 +12,7 @@ import ru.yandex.practicum.filmorate.repository.impl.UserRepository;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -105,9 +106,19 @@ class UserRepositoryTest {
                 .containsExactlyInAnyOrder(user1.getId(), user2.getId());
     }
 
+    @Test
+    void shouldDeleteUser() {
+        User saved = userRepository.save(validUser());
+
+        userRepository.delete(saved.getId());
+
+        Optional<User> loaded = userRepository.getById(saved.getId());
+        assertThat(loaded).isEmpty();
+    }
+
     private User validUser() {
         User user = new User();
-        user.setEmail("test@mail.com");
+        user.setEmail("test-" + UUID.randomUUID() + "@mail.com");
         user.setLogin("testlogin");
         user.setName("Test User");
         user.setBirthday(LocalDate.of(2000, 1, 1));

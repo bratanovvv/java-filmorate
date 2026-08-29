@@ -4,13 +4,22 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.yandex.practicum.filmorate.entity.dao.Director;
+import ru.yandex.practicum.filmorate.entity.dao.Film;
+import ru.yandex.practicum.filmorate.entity.dao.Genre;
+import ru.yandex.practicum.filmorate.entity.dao.util.EventOperation;
+import ru.yandex.practicum.filmorate.entity.dao.util.EventType;
+import ru.yandex.practicum.filmorate.entity.dao.util.FilmSortOption;
+import ru.yandex.practicum.filmorate.entity.dao.util.SearchTarget;
 import ru.yandex.practicum.filmorate.exception.ApiException;
 import ru.yandex.practicum.filmorate.exception.ErrorCode;
-import ru.yandex.practicum.filmorate.entity.dao.Film;
-import ru.yandex.practicum.filmorate.entity.dao.User;
 import ru.yandex.practicum.filmorate.repository.impl.FilmRepository;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -21,6 +30,8 @@ public class FilmService {
     private final UserService userService;
     private final MpaRatingService mpaRatingService;
     private final GenreService genreService;
+    private final DirectorService directorService;
+    private final EventService eventService;
 
     public Film getFilm(int id) {
         return filmRepository.getById(id)
@@ -34,10 +45,9 @@ public class FilmService {
     @Transactional
     public Film saveFilm(Film film) {
         validateExistingFilm(film);
+
         Film saved = filmRepository.save(film);
-
         log.info("Создан фильм: id={}, name={}", saved.getId(), saved.getName());
-
         return saved;
     }
 
@@ -53,48 +63,122 @@ public class FilmService {
         existingFilm.setMpa(film.getMpa());
         existingFilm.getGenres().clear();
         existingFilm.getGenres().addAll(film.getGenres());
+        existingFilm.getDirectors().clear();
+        existingFilm.getDirectors().addAll(film.getDirectors());
 
-        log.info("Обновлён фильм: id={}, name={}", existingFilm.getId(), existingFilm.getName());
-
-        return filmRepository.update(existingFilm);
+        Film updated = filmRepository.update(existingFilm);
+        log.info("Обновлён фильм: id={}, name={}", updated.getId(), updated.getName());
+        return updated;
     }
 
     @Transactional
     public void addLike(int filmId, int userId) {
-        Film film = getFilm(filmId);
-        User user = userService.getUser(userId);
+        checkFilmExists(filmId);
+        userService.checkUserExists(userId);
 
-        film.getLikes().add(userId);
-        filmRepository.update(film);
-
+        filmRepository.addLike(filmId, userId);
+        eventService.record(EventType.LIKE, EventOperation.ADD, userId, filmId);
         log.info("Пользователь id={} поставил лайк фильму id={}", userId, filmId);
     }
 
     @Transactional
     public void removeLike(int filmId, int userId) {
-        Film film = getFilm(filmId);
-        validateExistingUser(userId);
+        checkFilmExists(filmId);
+        userService.checkUserExists(userId);
 
-        film.getLikes().remove(userId);
-        filmRepository.update(film);
-
+        filmRepository.removeLike(filmId, userId);
+        eventService.record(EventType.LIKE, EventOperation.REMOVE, userId, filmId);
         log.info("Пользователь id={} убрал лайк с фильма id={}", userId, filmId);
     }
 
-    public List<Film> getPopularFilms(int count) {
-        return filmRepository.getPopularFilms(count);
+    public List<Film> popular(int count, Long genreId, Integer year) {
+        log.info("Запрос популярных фильмов: count={}, genreId={}, year={}", count, genreId, year);
+        return filmRepository.findPopularByGenreAndYear(count, genreId, year);
+    }
+
+    public List<Film> getFilmsByDirector(int directorId, FilmSortOption sortBy) {
+        Director director = directorService.getDirector(directorId);
+        return filmRepository.getFilmsByDirector(director.getId(), sortBy);
+    }
+
+    public List<Film> getRecommendations(int userId) {
+        userService.checkUserExists(userId);
+        return filmRepository.getUserRecommendations(userId);
+    }
+
+    @Transactional
+    public void deleteFilm(int filmId) {
+        checkFilmExists(filmId);
+        filmRepository.delete(filmId);
+        log.info("Удален фильм: id={}", filmId);
+    }
+
+    public List<Film> getCommonFilms(int userId, int friendId) {
+        userService.getUser(userId);
+        userService.getUser(friendId);
+
+        log.info("Поиск общих фильмов для пользователей: userId={}, friendId={}", userId, friendId);
+        List<Film> films = filmRepository.getCommonFilms(userId, friendId);
+        log.info("Найдено общих фильмов: {}", films.size());
+        return films;
+    }
+
+    public void checkFilmExists(int filmId) {
+        if (!filmRepository.existsById(filmId)) {
+            throw new ApiException(ErrorCode.FILM_NOT_FOUND, filmId);
+        }
     }
 
     private void validateExistingFilm(Film film) {
         if (film.getMpa() != null) {
             mpaRatingService.getMpaRating(film.getMpa().getId());
         }
-        for (var genre : film.getGenres()) {
+        for (Genre genre : film.getGenres()) {
             genreService.getGenre(genre.getId());
+        }
+
+        for (Director director : film.getDirectors()) {
+            directorService.getDirector(director.getId());
         }
     }
 
-    private void validateExistingUser(int userId) {
-        userService.getUser(userId);
+    public List<Film> search(String query, String by) {
+        if (query == null || query.isBlank()) {
+            throw new ApiException(ErrorCode.SEARCH_QUERY_EMPTY);
+        }
+
+        Set<SearchTarget> targets = parseSearchTargets(by);
+
+        List<Film> films = filmRepository.searchFilms(query, targets);
+
+        log.info("Поиск фильмов: query={}, by={}, найдено {}", query, by, films.size());
+
+        return films;
+    }
+
+    private Set<SearchTarget> parseSearchTargets(String by) {
+        if (by == null) {
+            throw new ApiException(ErrorCode.SEARCH_BY_INVALID, by);
+        }
+
+        Set<SearchTarget> targets = Arrays.stream(by.split(","))
+                .map(target -> target.trim().toLowerCase(Locale.ROOT))
+                .filter(target -> !target.isEmpty())
+                .map(this::toSearchTarget)
+                .collect(Collectors.toSet());
+
+        if (targets.isEmpty()) {
+            throw new ApiException(ErrorCode.SEARCH_BY_INVALID, by);
+        }
+
+        return targets;
+    }
+
+    private SearchTarget toSearchTarget(String target) {
+        try {
+            return SearchTarget.valueOf(target);
+        } catch (IllegalArgumentException e) {
+            throw new ApiException(ErrorCode.SEARCH_BY_INVALID, target);
+        }
     }
 }

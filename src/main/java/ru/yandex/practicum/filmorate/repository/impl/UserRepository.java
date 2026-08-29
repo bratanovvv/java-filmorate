@@ -6,8 +6,8 @@ import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.entity.dao.User;
 import ru.yandex.practicum.filmorate.repository.AbstractRepository;
 import ru.yandex.practicum.filmorate.repository.impl.query.UserQueries;
+import ru.yandex.practicum.filmorate.repository.util.SqlDates;
 
-import java.sql.Date;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -23,13 +23,9 @@ public class UserRepository extends AbstractRepository<Integer, User> {
 
     @Override
     public Optional<User> getById(Integer id) {
-        List<User> users = findAll(UserQueries.FIND_BY_ID, id);
-        if (users.isEmpty()) {
-            return Optional.empty();
-        }
-        User user = users.getFirst();
-        loadFriendsForUsers(List.of(user));
-        return Optional.of(user);
+        Optional<User> userOpt = findOne(UserQueries.FIND_BY_ID, id);
+        userOpt.ifPresent(u -> loadFriendsForUsers(List.of(u)));
+        return userOpt;
     }
 
     @Override
@@ -45,7 +41,7 @@ public class UserRepository extends AbstractRepository<Integer, User> {
                 user.getEmail(),
                 user.getLogin(),
                 user.getName(),
-                user.getBirthday() != null ? Date.valueOf(user.getBirthday()) : null);
+                SqlDates.toSqlDate(user.getBirthday()));
         user.setId(id);
         return user;
     }
@@ -56,7 +52,7 @@ public class UserRepository extends AbstractRepository<Integer, User> {
                 user.getEmail(),
                 user.getLogin(),
                 user.getName(),
-                user.getBirthday() != null ? Date.valueOf(user.getBirthday()) : null,
+                SqlDates.toSqlDate(user.getBirthday()),
                 user.getId());
         jdbc.update(UserQueries.DELETE_FRIENDS, user.getId());
         saveFriends(user);
@@ -68,6 +64,15 @@ public class UserRepository extends AbstractRepository<Integer, User> {
         List<User> users = findByIds(UserQueries.FIND_ALL_BY_IDS, ids);
         loadFriendsForUsers(users);
         return users;
+    }
+
+    @Override
+    public void delete(Integer id) {
+        deleteById(UserQueries.DELETE, id);
+    }
+
+    public boolean existsById(Integer id) {
+        return exists(UserQueries.EXISTS_BY_ID, id);
     }
 
     private void loadFriendsForUsers(List<User> users) {

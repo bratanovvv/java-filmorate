@@ -22,10 +22,7 @@ public class MpaRatingController {
 
     @GetMapping
     public List<MpaRatingDto> getMpaRatings() {
-        List<MpaRating> ratings = mpaRatingService.getMpaRatings();
-        return ratings.stream()
-                .map(mpaRatingMapper::toDto)
-                .toList();
+        return mpaRatingMapper.toDtoList(mpaRatingService.getMpaRatings());
     }
 
     @GetMapping("/{id}")

@@ -6,15 +6,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
+import ru.yandex.practicum.filmorate.entity.dao.Director;
 import ru.yandex.practicum.filmorate.entity.dao.Film;
 import ru.yandex.practicum.filmorate.entity.dao.MpaRating;
 import ru.yandex.practicum.filmorate.entity.dao.User;
+import ru.yandex.practicum.filmorate.entity.dao.util.SearchTarget;
+import ru.yandex.practicum.filmorate.repository.impl.DirectorRepository;
 import ru.yandex.practicum.filmorate.repository.impl.FilmRepository;
 import ru.yandex.practicum.filmorate.repository.impl.UserRepository;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -26,6 +31,7 @@ class FilmRepositoryTest {
 
     private final FilmRepository filmRepository;
     private final UserRepository userRepository;
+    private final DirectorRepository directorRepository;
 
     @Test
     void shouldSaveAndFindFilmById() {
@@ -114,14 +120,12 @@ class FilmRepositoryTest {
         User user1 = userRepository.save(validUser());
         User user2 = userRepository.save(validUser());
 
-        film1.getLikes().add(user1.getId());
-        film1.getLikes().add(user2.getId());
-        filmRepository.update(film1);
+        filmRepository.addLike(film1.getId(), user1.getId());
+        filmRepository.addLike(film1.getId(), user2.getId());
 
-        film2.getLikes().add(user1.getId());
-        filmRepository.update(film2);
+        filmRepository.addLike(film2.getId(), user1.getId());
 
-        List<Film> popular = filmRepository.getPopularFilms(2);
+        List<Film> popular = filmRepository.findPopularByGenreAndYear(2, null, null);
 
         assertThat(popular)
                 .hasSize(2)
@@ -134,7 +138,7 @@ class FilmRepositoryTest {
         Film film1 = filmRepository.save(validFilm());
         Film film2 = filmRepository.save(validFilm());
 
-        List<Film> popular = filmRepository.getPopularFilms(100);
+        List<Film> popular = filmRepository.findPopularByGenreAndYear(100, null, null);
 
         assertThat(popular)
                 .hasSize(2)
@@ -143,19 +147,276 @@ class FilmRepositoryTest {
     }
 
     @Test
-    void shouldPersistAndLoadLikes() {
-        Film film = filmRepository.save(validFilm());
+    void shouldDeleteFilm() {
+        Film saved = filmRepository.save(validFilm());
+
+        filmRepository.delete(saved.getId());
+
+        Optional<Film> loaded = filmRepository.getById(saved.getId());
+        assertThat(loaded).isEmpty();
+    }
+
+    // -------- RECOMMENDATIONS --------
+
+    @Test
+    void shouldReturnRecommendationsFromSimilarUser() {
+        Film film1 = filmRepository.save(validFilm());
+        Film film2 = filmRepository.save(validFilm());
+        Film film3 = filmRepository.save(validFilm());
+        User user1 = userRepository.save(validUser());
+        User user2 = userRepository.save(validUser());
+        User user3 = userRepository.save(validUser());
+
+        like(film1, user1);
+        like(film2, user1);
+        like(film1, user2);
+        like(film2, user2);
+        like(film3, user2);
+        like(film1, user3);
+
+        List<Film> recommendations = filmRepository.getUserRecommendations(user1.getId());
+
+        assertThat(recommendations)
+                .hasSize(1)
+                .extracting(Film::getId)
+                .containsExactly(film3.getId());
+    }
+
+    @Test
+    void shouldReturnEmptyWhenUserHasNoLikes() {
+        Film film1 = filmRepository.save(validFilm());
+        User user1 = userRepository.save(validUser());
+        User user2 = userRepository.save(validUser());
+        like(film1, user2);
+
+        List<Film> recommendations = filmRepository.getUserRecommendations(user1.getId());
+
+        assertThat(recommendations).isEmpty();
+    }
+
+    @Test
+    void shouldReturnEmptyWhenNoOverlapWithOtherUsers() {
+        Film film1 = filmRepository.save(validFilm());
+        Film film2 = filmRepository.save(validFilm());
+        User user1 = userRepository.save(validUser());
+        User user2 = userRepository.save(validUser());
+        like(film1, user1);
+        like(film2, user2);
+
+        List<Film> recommendations = filmRepository.getUserRecommendations(user1.getId());
+
+        assertThat(recommendations).isEmpty();
+    }
+
+    @Test
+    void shouldExcludeFilmsAlreadyLikedByTargetUser() {
+        Film film1 = filmRepository.save(validFilm());
+        Film film2 = filmRepository.save(validFilm());
+        Film film3 = filmRepository.save(validFilm());
+        User user1 = userRepository.save(validUser());
+        User user2 = userRepository.save(validUser());
+        like(film1, user1);
+        like(film2, user1);
+        like(film3, user1);
+        like(film1, user2);
+        like(film2, user2);
+        like(film3, user2);
+
+        List<Film> recommendations = filmRepository.getUserRecommendations(user1.getId());
+
+        assertThat(recommendations).isEmpty();
+    }
+
+    @Test
+    void shouldSelectOnlyTopSimilarUserFilms() {
+        Film film1 = filmRepository.save(validFilm());
+        Film film2 = filmRepository.save(validFilm());
+        Film film3 = filmRepository.save(validFilm());
+        Film film4 = filmRepository.save(validFilm());
+        Film film5 = filmRepository.save(validFilm());
+        User user1 = userRepository.save(validUser());
+        User user2 = userRepository.save(validUser());
+        User user3 = userRepository.save(validUser());
+
+        like(film1, user1);
+        like(film2, user1);
+        like(film1, user2);
+        like(film2, user2);
+        like(film3, user2);
+        like(film4, user2);
+        like(film1, user3);
+        like(film5, user3);
+
+        List<Film> recommendations = filmRepository.getUserRecommendations(user1.getId());
+
+        assertThat(recommendations)
+                .hasSize(2)
+                .extracting(Film::getId)
+                .containsExactlyInAnyOrder(film3.getId(), film4.getId())
+                .doesNotContain(film5.getId());
+    }
+
+    @Test
+    void shouldCombineRecommendationsFromTiedSimilarUsers() {
+        Film film1 = filmRepository.save(validFilm());
+        Film film2 = filmRepository.save(validFilm());
+        Film film3 = filmRepository.save(validFilm());
+        Film film4 = filmRepository.save(validFilm());
+        User user1 = userRepository.save(validUser());
+        User user2 = userRepository.save(validUser());
+        User user3 = userRepository.save(validUser());
+
+        like(film1, user1);
+        like(film2, user1);
+        like(film1, user2);
+        like(film2, user2);
+        like(film3, user2);
+        like(film1, user3);
+        like(film2, user3);
+        like(film4, user3);
+
+        List<Film> recommendations = filmRepository.getUserRecommendations(user1.getId());
+
+        assertThat(recommendations)
+                .hasSize(2)
+                .extracting(Film::getId)
+                .containsExactlyInAnyOrder(film3.getId(), film4.getId());
+    }
+
+    @Test
+    void shouldOrderRecommendationsByPopularity() {
+        Film film1 = filmRepository.save(validFilm());
+        Film film2 = filmRepository.save(validFilm());
+        Film film3 = filmRepository.save(validFilm());
+        User user1 = userRepository.save(validUser());
+        User user2 = userRepository.save(validUser());
+        User user3 = userRepository.save(validUser());
+
+        like(film1, user1);
+        like(film1, user2);
+        like(film2, user2);
+        like(film3, user2);
+        like(film3, user3);
+
+        List<Film> recommendations = filmRepository.getUserRecommendations(user1.getId());
+
+        assertThat(recommendations)
+                .hasSize(2)
+                .extracting(Film::getId)
+                .containsExactly(film3.getId(), film2.getId());
+    }
+
+    // -------- SEARCH --------
+
+    @Test
+    void shouldSearchTitleIgnoringCase() {
+        Film target = filmRepository.save(namedFilm("Крадущийся тигр"));
+
+        assertThat(filmRepository.searchFilms("КРАД", Set.of(SearchTarget.title)))
+                .extracting(Film::getId)
+                .containsExactly(target.getId());
+    }
+
+    @Test
+    void shouldNotMixSearchBranches() {
+        Director director = directorRepository.save(namedDirector("Тарантино"));
+        Film byDirector = filmRepository.save(filmWithDirectors(namedFilm("Убить Билла"), director));
+        Film byTitle = filmRepository.save(namedFilm("Фильм про Тарантино"));
+
+        assertThat(filmRepository.searchFilms("таранти", Set.of(SearchTarget.title)))
+                .extracting(Film::getId)
+                .containsExactly(byTitle.getId());
+
+        assertThat(filmRepository.searchFilms("таранти", Set.of(SearchTarget.director)))
+                .extracting(Film::getId)
+                .containsExactly(byDirector.getId());
+    }
+
+    @Test
+    void shouldReturnFilmOnceWhenSeveralDirectorsMatch() {
+        Director first = directorRepository.save(namedDirector("Тарантино Квентин"));
+        Director second = directorRepository.save(namedDirector("Тарантино Роберт"));
+        Film target = filmRepository.save(
+                filmWithDirectors(namedFilm("Общий фильм"), first, second));
+
+        assertThat(filmRepository.searchFilms("таранти", Set.of(SearchTarget.director)))
+                .extracting(Film::getId)
+                .containsExactly(target.getId());
+    }
+
+    @Test
+    void shouldReturnFilmOnceWhenTitleAndDirectorBothMatch() {
+        Director director = directorRepository.save(namedDirector("Тарантино"));
+        Film target = filmRepository.save(
+                filmWithDirectors(namedFilm("Тарантино снимает"), director));
+
+        assertThat(filmRepository.searchFilms("таранти",
+                Set.of(SearchTarget.title, SearchTarget.director)))
+                .extracting(Film::getId)
+                .containsExactly(target.getId());
+    }
+
+    @Test
+    void shouldOrderSearchResultsByLikesThenById() {
+        Film first = filmRepository.save(namedFilm("Поиск один"));
+        Film second = filmRepository.save(namedFilm("Поиск два"));
+        Film popular = filmRepository.save(namedFilm("Поиск три"));
+
         User user = userRepository.save(validUser());
+        like(popular, user);
 
-        film.getLikes().add(user.getId());
-        filmRepository.update(film);
+        assertThat(filmRepository.searchFilms("поиск", Set.of(SearchTarget.title)))
+                .extracting(Film::getId)
+                .containsExactly(popular.getId(), first.getId(), second.getId());
+    }
 
-        Optional<Film> loaded = filmRepository.getById(film.getId());
+    @Test
+    void shouldLoadGenresAndDirectorsForFoundFilms() {
+        Director director = directorRepository.save(namedDirector("Тарантино"));
+        Film withDirector = filmRepository.save(
+                filmWithDirectors(namedFilm("Поиск с режиссёром"), director));
+        Film withoutDirector = filmRepository.save(namedFilm("Поиск без режиссёра"));
 
-        assertThat(loaded)
-                .isPresent()
-                .hasValueSatisfying(f ->
-                        assertThat(f.getLikes()).contains(user.getId()));
+        List<Film> found = filmRepository.searchFilms("поиск", Set.of(SearchTarget.title));
+
+        assertThat(found).hasSize(2);
+        assertThat(found)
+                .filteredOn(f -> f.getId().equals(withDirector.getId()))
+                .singleElement()
+                .satisfies(f -> assertThat(f.getDirectors()).hasSize(1));
+        assertThat(found)
+                .filteredOn(f -> f.getId().equals(withoutDirector.getId()))
+                .singleElement()
+                .satisfies(f -> assertThat(f.getDirectors()).isEmpty());
+    }
+
+    @Test
+    void shouldNotFailOnLikeSpecialCharactersInQuery() {
+        filmRepository.save(namedFilm("Матрица"));
+
+        assertThat(filmRepository.searchFilms("100%", Set.of(SearchTarget.title))).isEmpty();
+        assertThat(filmRepository.searchFilms("a\\b", Set.of(SearchTarget.title))).isEmpty();
+    }
+
+    private void like(Film film, User user) {
+        filmRepository.addLike(film.getId(), user.getId());
+    }
+
+    private Film namedFilm(String name) {
+        Film film = validFilm();
+        film.setName(name);
+        return film;
+    }
+
+    private Film filmWithDirectors(Film film, Director... directors) {
+        film.getDirectors().addAll(List.of(directors));
+        return film;
+    }
+
+    private Director namedDirector(String name) {
+        Director director = new Director();
+        director.setName(name);
+        return director;
     }
 
     private Film validFilm() {
@@ -172,7 +433,7 @@ class FilmRepositoryTest {
 
     private User validUser() {
         User user = new User();
-        user.setEmail("test@mail.com");
+        user.setEmail("test-" + UUID.randomUUID() + "@mail.com");
         user.setLogin("testlogin");
         user.setName("Test User");
         user.setBirthday(LocalDate.of(2000, 1, 1));

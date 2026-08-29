@@ -1,19 +1,14 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.entity.dao.Film;
+import ru.yandex.practicum.filmorate.entity.dao.util.FilmSortOption;
 import ru.yandex.practicum.filmorate.entity.dto.FilmDto;
 import ru.yandex.practicum.filmorate.entity.dto.validation.ValidationGroups;
 import ru.yandex.practicum.filmorate.entity.mapper.Mapper;
@@ -24,6 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/films")
 @RequiredArgsConstructor
+@Validated
 public class FilmController {
 
     private static final String DEFAULT_POPULAR_COUNT = "10";
@@ -39,10 +35,7 @@ public class FilmController {
 
     @GetMapping
     public List<FilmDto> getFilms() {
-        List<Film> films = filmService.getFilms();
-        return films.stream()
-                .map(filmMapper::toDto)
-                .toList();
+        return filmMapper.toDtoList(filmService.getFilms());
     }
 
     @ResponseStatus(HttpStatus.CREATED)
@@ -61,23 +54,45 @@ public class FilmController {
         return filmMapper.toDto(updated);
     }
 
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     @PutMapping("/{id}/like/{userId}")
     public void addLike(@PathVariable int id, @PathVariable int userId) {
         filmService.addLike(id, userId);
     }
 
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{id}/like/{userId}")
     public void removeLike(@PathVariable int id, @PathVariable int userId) {
         filmService.removeLike(id, userId);
     }
 
     @GetMapping("/popular")
-    public List<FilmDto> getPopularFilms(@RequestParam(defaultValue = DEFAULT_POPULAR_COUNT) int count) {
-        List<Film> films = filmService.getPopularFilms(count);
-        return films.stream()
-                .map(filmMapper::toDto)
-                .toList();
+    public List<FilmDto> getPopularFilms(
+            @RequestParam(defaultValue = DEFAULT_POPULAR_COUNT) @Positive int count,
+            @RequestParam(required = false) @Positive Long genreId,
+            @RequestParam(required = false) @Min(1895) @Max(2100) Integer year
+    ) {
+        return filmMapper.toDtoList(filmService.popular(count, genreId, year));
+    }
+
+    @GetMapping("/director/{directorId}")
+    public List<FilmDto> getDirectorFilms(@PathVariable int directorId,
+                                          @RequestParam(defaultValue = "year") FilmSortOption sortBy) {
+        return filmMapper.toDtoList(filmService.getFilmsByDirector(directorId, sortBy));
+    }
+
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping("/{id}")
+    public void deleteFilm(@PathVariable int id) {
+        filmService.deleteFilm(id);
+    }
+
+    @GetMapping("/common")
+    public List<FilmDto> getCommonFilms(@RequestParam int userId, @RequestParam int friendId) {
+        return filmMapper.toDtoList(filmService.getCommonFilms(userId, friendId));
+    }
+
+    @GetMapping("/search")
+    public List<FilmDto> searchFilms(@RequestParam(required = false) String query,
+                                     @RequestParam(defaultValue = "title") String by) {
+        return filmMapper.toDtoList(filmService.search(query, by));
     }
 }

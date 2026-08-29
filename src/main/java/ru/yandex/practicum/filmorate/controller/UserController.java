@@ -12,10 +12,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import ru.yandex.practicum.filmorate.entity.dao.Event;
+import ru.yandex.practicum.filmorate.entity.dao.Film;
 import ru.yandex.practicum.filmorate.entity.dao.User;
+import ru.yandex.practicum.filmorate.entity.dto.FeedEventDto;
+import ru.yandex.practicum.filmorate.entity.dto.FilmDto;
 import ru.yandex.practicum.filmorate.entity.dto.UserDto;
 import ru.yandex.practicum.filmorate.entity.dto.validation.ValidationGroups;
 import ru.yandex.practicum.filmorate.entity.mapper.Mapper;
+import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.List;
@@ -26,7 +31,10 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
+    private final FilmService filmService;
     private final Mapper<UserDto, User> userMapper;
+    private final Mapper<FilmDto, Film> filmMapper;
+    private final Mapper<FeedEventDto, Event> feedEventMapper;
 
     @GetMapping("/{id}")
     public UserDto getUser(@PathVariable int id) {
@@ -36,10 +44,7 @@ public class UserController {
 
     @GetMapping
     public List<UserDto> getUsers() {
-        List<User> users = userService.getUsers();
-        return users.stream()
-                .map(userMapper::toDto)
-                .toList();
+        return userMapper.toDtoList(userService.getUsers());
     }
 
     @ResponseStatus(HttpStatus.CREATED)
@@ -72,17 +77,29 @@ public class UserController {
 
     @GetMapping("/{id}/friends")
     public List<UserDto> getUserFriends(@PathVariable int id) {
-        List<User> friends = userService.getUserFriends(id);
-        return friends.stream()
-                .map(userMapper::toDto)
-                .toList();
+        return userMapper.toDtoList(userService.getUserFriends(id));
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")
     public List<UserDto> getCommonFriends(@PathVariable int id, @PathVariable int otherId) {
-        List<User> commonFriends = userService.getCommonFriends(id, otherId);
-        return commonFriends.stream()
-                .map(userMapper::toDto)
+        return userMapper.toDtoList(userService.getCommonFriends(id, otherId));
+    }
+
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping("/{id}")
+    public void deleteUser(@PathVariable int id) {
+        userService.deleteUser(id);
+    }
+
+    @GetMapping("/{id}/recommendations")
+    public List<FilmDto> getRecommendations(@PathVariable int id) {
+        return filmMapper.toDtoList(filmService.getRecommendations(id));
+    }
+
+    @GetMapping("/{id}/feed")
+    public List<FeedEventDto> getFeed(@PathVariable int id) {
+        return userService.getUserFeed(id).stream()
+                .map(feedEventMapper::toDto)
                 .toList();
     }
 }
