@@ -138,10 +138,33 @@ class FilmServiceTest {
     }
 
     @Test
+    void shouldBeIdempotentWhenAddingDuplicateLike() {
+        Film film = filmService.saveFilm(validFilm());
+        User user = userService.saveUser(validUser());
+
+        filmService.addLike(film.getId(), user.getId());
+        filmService.addLike(film.getId(), user.getId());
+
+        Film likedFilm = filmService.getFilm(film.getId());
+        assertEquals(1, likedFilm.getLikes().size());
+    }
+
+    @Test
     void shouldRemoveLike() {
         Film film = filmService.saveFilm(validFilm());
         User user = userService.saveUser(validUser());
         filmService.addLike(film.getId(), user.getId());
+
+        filmService.removeLike(film.getId(), user.getId());
+
+        Film likedFilm = filmService.getFilm(film.getId());
+        assertTrue(likedFilm.getLikes().isEmpty());
+    }
+
+    @Test
+    void shouldBeIdempotentWhenRemovingNonExistentLike() {
+        Film film = filmService.saveFilm(validFilm());
+        User user = userService.saveUser(validUser());
 
         filmService.removeLike(film.getId(), user.getId());
 
@@ -571,6 +594,53 @@ class FilmServiceTest {
                 () -> filmService.deleteFilm(999)
         );
         assertEquals(ErrorCode.FILM_NOT_FOUND, ex.getCode());
+    }
+
+    // -------- SEARCH: валидация параметров --------
+
+    @Test
+    void shouldThrowWhenSearchQueryIsMissing() {
+        ApiException ex = assertThrows(
+                ApiException.class,
+                () -> filmService.search(null, "title")
+        );
+        assertEquals(ErrorCode.SEARCH_QUERY_EMPTY, ex.getCode());
+    }
+
+    @Test
+    void shouldThrowWhenSearchQueryIsBlank() {
+        ApiException ex = assertThrows(
+                ApiException.class,
+                () -> filmService.search("   ", "title")
+        );
+        assertEquals(ErrorCode.SEARCH_QUERY_EMPTY, ex.getCode());
+    }
+
+    @Test
+    void shouldThrowWhenSearchTargetIsUnknown() {
+        ApiException ex = assertThrows(
+                ApiException.class,
+                () -> filmService.search("крад", "genre")
+        );
+        assertEquals(ErrorCode.SEARCH_BY_INVALID, ex.getCode());
+    }
+
+    @Test
+    void shouldThrowWhenOneOfSearchTargetsIsUnknown() {
+        ApiException ex = assertThrows(
+                ApiException.class,
+                () -> filmService.search("крад", "title,genre")
+        );
+        assertEquals(ErrorCode.SEARCH_BY_INVALID, ex.getCode());
+    }
+
+    @Test
+    void shouldThrowWhenSearchTargetIsBlank() {
+        ApiException ex = assertThrows(
+                ApiException.class,
+                () -> filmService.search("крад", "  ")
+        );
+        assertEquals(ErrorCode.SEARCH_BY_INVALID, ex.getCode());
     }
 
     // -------- helper --------

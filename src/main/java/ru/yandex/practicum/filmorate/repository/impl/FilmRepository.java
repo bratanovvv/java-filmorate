@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.entity.dao.Director;
 import ru.yandex.practicum.filmorate.entity.dao.Film;
 import ru.yandex.practicum.filmorate.entity.dao.Genre;
 import ru.yandex.practicum.filmorate.entity.dao.util.FilmSortOption;
+import ru.yandex.practicum.filmorate.entity.dao.util.SearchTarget;
 import ru.yandex.practicum.filmorate.repository.AbstractRepository;
 import ru.yandex.practicum.filmorate.repository.impl.query.FilmQueries;
 
@@ -15,6 +16,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Repository
@@ -103,6 +105,19 @@ public class FilmRepository extends AbstractRepository<Integer, Film> {
             case year -> findAll(FilmQueries.FIND_BY_DIRECTOR_ORDER_BY_YEAR, directorId);
             case likes -> findAll(FilmQueries.FIND_BY_DIRECTOR_ORDER_BY_LIKES, directorId);
         };
+        loadFilmsLinkedEntities(films);
+        return films;
+    }
+
+    /**
+     * Ищет фильмы по подстроке в полях, перечисленных в {@code targets}.
+     * Поле, которого нет в наборе, в поиске не участвует.
+     */
+    public List<Film> searchFilms(String query, Set<SearchTarget> targets) {
+        String pattern = "%" + query + "%";
+        List<Film> films = findAll(FilmQueries.SEARCH,
+                targets.contains(SearchTarget.title) ? pattern : null,
+                targets.contains(SearchTarget.director) ? pattern : null);
         loadFilmsLinkedEntities(films);
         return films;
     }

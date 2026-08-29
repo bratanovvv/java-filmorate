@@ -105,6 +105,21 @@ public final class FilmQueries {
             ORDER BY (SELECT COUNT(*) FROM likes l WHERE l.film_id = f.id) DESC, f.id ASC
             """;
 
+    public static final String SEARCH = """
+            SELECT f.*, m.name AS mpa_name
+            FROM films f
+            LEFT JOIN mpa_ratings m ON f.mpa_rating_id = m.id
+            WHERE LOWER(f.name) LIKE LOWER(?)
+               OR EXISTS (
+                   SELECT 1
+                   FROM film_directors fd
+                   JOIN directors d ON d.id = fd.director_id
+                   WHERE fd.film_id = f.id
+                     AND LOWER(d.name) LIKE LOWER(?)
+               )
+            ORDER BY (SELECT COUNT(*) FROM likes l WHERE l.film_id = f.id) DESC, f.id ASC
+            """;
+
     public static final String FIND_POPULAR_BY_GENRE_AND_YEAR = """
         SELECT
             f.id,

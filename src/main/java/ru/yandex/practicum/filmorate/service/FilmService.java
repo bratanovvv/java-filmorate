@@ -10,11 +10,16 @@ import ru.yandex.practicum.filmorate.entity.dao.Genre;
 import ru.yandex.practicum.filmorate.entity.dao.util.EventOperation;
 import ru.yandex.practicum.filmorate.entity.dao.util.EventType;
 import ru.yandex.practicum.filmorate.entity.dao.util.FilmSortOption;
+import ru.yandex.practicum.filmorate.entity.dao.util.SearchTarget;
 import ru.yandex.practicum.filmorate.exception.ApiException;
 import ru.yandex.practicum.filmorate.exception.ErrorCode;
 import ru.yandex.practicum.filmorate.repository.impl.FilmRepository;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -139,6 +144,46 @@ public class FilmService {
 
         for (Director director : film.getDirectors()) {
             directorService.getDirector(director.getId());
+        }
+    }
+
+    public List<Film> search(String query, String by) {
+        if (query == null || query.isBlank()) {
+            throw new ApiException(ErrorCode.SEARCH_QUERY_EMPTY);
+        }
+
+        Set<SearchTarget> targets = parseSearchTargets(by);
+
+        List<Film> films = filmRepository.searchFilms(query, targets);
+
+        log.info("Поиск фильмов: query={}, by={}, найдено {}", query, by, films.size());
+
+        return films;
+    }
+
+    private Set<SearchTarget> parseSearchTargets(String by) {
+        if (by == null) {
+            throw new ApiException(ErrorCode.SEARCH_BY_INVALID, by);
+        }
+
+        Set<SearchTarget> targets = Arrays.stream(by.split(","))
+                .map(target -> target.trim().toLowerCase(Locale.ROOT))
+                .filter(target -> !target.isEmpty())
+                .map(this::toSearchTarget)
+                .collect(Collectors.toSet());
+
+        if (targets.isEmpty()) {
+            throw new ApiException(ErrorCode.SEARCH_BY_INVALID, by);
+        }
+
+        return targets;
+    }
+
+    private SearchTarget toSearchTarget(String target) {
+        try {
+            return SearchTarget.valueOf(target);
+        } catch (IllegalArgumentException e) {
+            throw new ApiException(ErrorCode.SEARCH_BY_INVALID, target);
         }
     }
 }

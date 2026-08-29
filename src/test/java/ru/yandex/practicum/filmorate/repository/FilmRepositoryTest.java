@@ -6,15 +6,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
+import ru.yandex.practicum.filmorate.entity.dao.Director;
 import ru.yandex.practicum.filmorate.entity.dao.Film;
 import ru.yandex.practicum.filmorate.entity.dao.MpaRating;
 import ru.yandex.practicum.filmorate.entity.dao.User;
+import ru.yandex.practicum.filmorate.entity.dao.util.SearchTarget;
+import ru.yandex.practicum.filmorate.repository.impl.DirectorRepository;
 import ru.yandex.practicum.filmorate.repository.impl.FilmRepository;
 import ru.yandex.practicum.filmorate.repository.impl.UserRepository;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -26,6 +30,7 @@ class FilmRepositoryTest {
 
     private final FilmRepository filmRepository;
     private final UserRepository userRepository;
+    private final DirectorRepository directorRepository;
 
     @Test
     void shouldSaveAndFindFilmById() {
@@ -317,8 +322,117 @@ class FilmRepositoryTest {
                 .containsExactly(film3.getId(), film2.getId());
     }
 
+    // -------- SEARCH --------
+
+    @Test
+    void shouldSearchTitleIgnoringCase() {
+        Film target = filmRepository.save(namedFilm("Крадущийся тигр"));
+
+        assertThat(filmRepository.searchFilms("КРАД", Set.of(SearchTarget.title)))
+                .extracting(Film::getId)
+                .containsExactly(target.getId());
+    }
+
+    @Test
+    void shouldNotMixSearchBranches() {
+        Director director = directorRepository.save(namedDirector("Тарантино"));
+        Film byDirector = filmRepository.save(filmWithDirectors(namedFilm("Убить Билла"), director));
+        Film byTitle = filmRepository.save(namedFilm("Фильм про Тарантино"));
+
+        assertThat(filmRepository.searchFilms("таранти", Set.of(SearchTarget.title)))
+                .extracting(Film::getId)
+                .containsExactly(byTitle.getId());
+
+        assertThat(filmRepository.searchFilms("таранти", Set.of(SearchTarget.director)))
+                .extracting(Film::getId)
+                .containsExactly(byDirector.getId());
+    }
+
+    @Test
+    void shouldReturnFilmOnceWhenSeveralDirectorsMatch() {
+        Director first = directorRepository.save(namedDirector("Тарантино Квентин"));
+        Director second = directorRepository.save(namedDirector("Тарантино Роберт"));
+        Film target = filmRepository.save(
+                filmWithDirectors(namedFilm("Общий фильм"), first, second));
+
+        assertThat(filmRepository.searchFilms("таранти", Set.of(SearchTarget.director)))
+                .extracting(Film::getId)
+                .containsExactly(target.getId());
+    }
+
+    @Test
+    void shouldReturnFilmOnceWhenTitleAndDirectorBothMatch() {
+        Director director = directorRepository.save(namedDirector("Тарантино"));
+        Film target = filmRepository.save(
+                filmWithDirectors(namedFilm("Тарантино снимает"), director));
+
+        assertThat(filmRepository.searchFilms("таранти",
+                Set.of(SearchTarget.title, SearchTarget.director)))
+                .extracting(Film::getId)
+                .containsExactly(target.getId());
+    }
+
+    @Test
+    void shouldOrderSearchResultsByLikesThenById() {
+        Film first = filmRepository.save(namedFilm("Поиск один"));
+        Film second = filmRepository.save(namedFilm("Поиск два"));
+        Film popular = filmRepository.save(namedFilm("Поиск три"));
+
+        User user = userRepository.save(validUser());
+        like(popular, user);
+
+        assertThat(filmRepository.searchFilms("поиск", Set.of(SearchTarget.title)))
+                .extracting(Film::getId)
+                .containsExactly(popular.getId(), first.getId(), second.getId());
+    }
+
+    @Test
+    void shouldLoadGenresAndDirectorsForFoundFilms() {
+        Director director = directorRepository.save(namedDirector("Тарантино"));
+        Film withDirector = filmRepository.save(
+                filmWithDirectors(namedFilm("Поиск с режиссёром"), director));
+        Film withoutDirector = filmRepository.save(namedFilm("Поиск без режиссёра"));
+
+        List<Film> found = filmRepository.searchFilms("поиск", Set.of(SearchTarget.title));
+
+        assertThat(found).hasSize(2);
+        assertThat(found)
+                .filteredOn(f -> f.getId().equals(withDirector.getId()))
+                .singleElement()
+                .satisfies(f -> assertThat(f.getDirectors()).hasSize(1));
+        assertThat(found)
+                .filteredOn(f -> f.getId().equals(withoutDirector.getId()))
+                .singleElement()
+                .satisfies(f -> assertThat(f.getDirectors()).isEmpty());
+    }
+
+    @Test
+    void shouldNotFailOnLikeSpecialCharactersInQuery() {
+        filmRepository.save(namedFilm("Матрица"));
+
+        assertThat(filmRepository.searchFilms("100%", Set.of(SearchTarget.title))).isEmpty();
+        assertThat(filmRepository.searchFilms("a\\b", Set.of(SearchTarget.title))).isEmpty();
+    }
+
     private void like(Film film, User user) {
         filmRepository.addLike(film.getId(), user.getId());
+    }
+
+    private Film namedFilm(String name) {
+        Film film = validFilm();
+        film.setName(name);
+        return film;
+    }
+
+    private Film filmWithDirectors(Film film, Director... directors) {
+        film.getDirectors().addAll(List.of(directors));
+        return film;
+    }
+
+    private Director namedDirector(String name) {
+        Director director = new Director();
+        director.setName(name);
+        return director;
     }
 
     private Film validFilm() {

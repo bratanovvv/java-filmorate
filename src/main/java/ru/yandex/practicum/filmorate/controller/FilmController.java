@@ -103,4 +103,13 @@ public class FilmController {
                 .map(filmMapper::toDto)
                 .toList();
     }
+
+    @GetMapping("/search")
+    public List<FilmDto> searchFilms(@RequestParam(required = false) String query,
+                                     @RequestParam(defaultValue = "title") String by) {
+        List<Film> films = filmService.search(query, by);
+        return films.stream()
+                .map(filmMapper::toDto)
+                .toList();
+    }
 }

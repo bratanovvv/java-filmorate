@@ -30,7 +30,12 @@ public enum ErrorCode {
     INTERNAL_SERVER_ERROR("internal.serverError", HttpStatus.INTERNAL_SERVER_ERROR.value()),
 
     // REVIEW
-    REVIEW_NOT_FOUND("review.notFound", HttpStatus.NOT_FOUND.value());
+    REVIEW_NOT_FOUND("review.notFound", HttpStatus.NOT_FOUND.value()),
+
+    // SEARCH
+    SEARCH_QUERY_EMPTY("search.query.empty", HttpStatus.BAD_REQUEST.value()),
+
+    SEARCH_BY_INVALID("search.by.invalid", HttpStatus.BAD_REQUEST.value());
 
 
     private final String key;
