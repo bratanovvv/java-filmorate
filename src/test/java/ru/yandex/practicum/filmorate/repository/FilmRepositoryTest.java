@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.entity.dao.Director;
 import ru.yandex.practicum.filmorate.entity.dao.Film;
 import ru.yandex.practicum.filmorate.entity.dao.MpaRating;
 import ru.yandex.practicum.filmorate.entity.dao.User;
+import ru.yandex.practicum.filmorate.entity.dao.util.SearchTarget;
 import ru.yandex.practicum.filmorate.repository.impl.DirectorRepository;
 import ru.yandex.practicum.filmorate.repository.impl.FilmRepository;
 import ru.yandex.practicum.filmorate.repository.impl.UserRepository;
@@ -17,6 +18,7 @@ import ru.yandex.practicum.filmorate.repository.impl.UserRepository;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -326,7 +328,7 @@ class FilmRepositoryTest {
     void shouldSearchTitleIgnoringCase() {
         Film target = filmRepository.save(namedFilm("Крадущийся тигр"));
 
-        assertThat(filmRepository.searchFilms("%КРАД%", null))
+        assertThat(filmRepository.searchFilms("КРАД", Set.of(SearchTarget.title)))
                 .extracting(Film::getId)
                 .containsExactly(target.getId());
     }
@@ -337,11 +339,11 @@ class FilmRepositoryTest {
         Film byDirector = filmRepository.save(filmWithDirectors(namedFilm("Убить Билла"), director));
         Film byTitle = filmRepository.save(namedFilm("Фильм про Тарантино"));
 
-        assertThat(filmRepository.searchFilms("%таранти%", null))
+        assertThat(filmRepository.searchFilms("таранти", Set.of(SearchTarget.title)))
                 .extracting(Film::getId)
                 .containsExactly(byTitle.getId());
 
-        assertThat(filmRepository.searchFilms(null, "%таранти%"))
+        assertThat(filmRepository.searchFilms("таранти", Set.of(SearchTarget.director)))
                 .extracting(Film::getId)
                 .containsExactly(byDirector.getId());
     }
@@ -353,7 +355,7 @@ class FilmRepositoryTest {
         Film target = filmRepository.save(
                 filmWithDirectors(namedFilm("Общий фильм"), first, second));
 
-        assertThat(filmRepository.searchFilms(null, "%таранти%"))
+        assertThat(filmRepository.searchFilms("таранти", Set.of(SearchTarget.director)))
                 .extracting(Film::getId)
                 .containsExactly(target.getId());
     }
@@ -364,7 +366,8 @@ class FilmRepositoryTest {
         Film target = filmRepository.save(
                 filmWithDirectors(namedFilm("Тарантино снимает"), director));
 
-        assertThat(filmRepository.searchFilms("%таранти%", "%таранти%"))
+        assertThat(filmRepository.searchFilms("таранти",
+                Set.of(SearchTarget.title, SearchTarget.director)))
                 .extracting(Film::getId)
                 .containsExactly(target.getId());
     }
@@ -378,7 +381,7 @@ class FilmRepositoryTest {
         User user = userRepository.save(validUser());
         like(popular, user);
 
-        assertThat(filmRepository.searchFilms("%поиск%", null))
+        assertThat(filmRepository.searchFilms("поиск", Set.of(SearchTarget.title)))
                 .extracting(Film::getId)
                 .containsExactly(popular.getId(), first.getId(), second.getId());
     }
@@ -390,7 +393,7 @@ class FilmRepositoryTest {
                 filmWithDirectors(namedFilm("Поиск с режиссёром"), director));
         Film withoutDirector = filmRepository.save(namedFilm("Поиск без режиссёра"));
 
-        List<Film> found = filmRepository.searchFilms("%поиск%", null);
+        List<Film> found = filmRepository.searchFilms("поиск", Set.of(SearchTarget.title));
 
         assertThat(found).hasSize(2);
         assertThat(found)
@@ -407,8 +410,8 @@ class FilmRepositoryTest {
     void shouldNotFailOnLikeSpecialCharactersInQuery() {
         filmRepository.save(namedFilm("Матрица"));
 
-        assertThat(filmRepository.searchFilms("%100%%", null)).isEmpty();
-        assertThat(filmRepository.searchFilms("%a\\b%", null)).isEmpty();
+        assertThat(filmRepository.searchFilms("100%", Set.of(SearchTarget.title))).isEmpty();
+        assertThat(filmRepository.searchFilms("a\\b", Set.of(SearchTarget.title))).isEmpty();
     }
 
     private void like(Film film, User user) {

@@ -8,6 +8,7 @@ import ru.yandex.practicum.filmorate.entity.dao.Director;
 import ru.yandex.practicum.filmorate.entity.dao.Film;
 import ru.yandex.practicum.filmorate.entity.dao.Genre;
 import ru.yandex.practicum.filmorate.entity.dao.util.FilmSortOption;
+import ru.yandex.practicum.filmorate.entity.dao.util.SearchTarget;
 import ru.yandex.practicum.filmorate.exception.ApiException;
 import ru.yandex.practicum.filmorate.exception.ErrorCode;
 import ru.yandex.practicum.filmorate.repository.impl.FilmRepository;
@@ -22,10 +23,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Service
 public class FilmService {
-
-    private static final String SEARCH_BY_TITLE = "title";
-    private static final String SEARCH_BY_DIRECTOR = "director";
-    private static final Set<String> SEARCH_TARGETS = Set.of(SEARCH_BY_TITLE, SEARCH_BY_DIRECTOR);
 
     private final FilmRepository filmRepository;
     private final UserService userService;
@@ -149,38 +146,38 @@ public class FilmService {
             throw new ApiException(ErrorCode.SEARCH_QUERY_EMPTY);
         }
 
-        Set<String> targets = parseSearchTargets(by);
-        String pattern = "%" + query + "%";
+        Set<SearchTarget> targets = parseSearchTargets(by);
 
-        List<Film> films = filmRepository.searchFilms(
-                targets.contains(SEARCH_BY_TITLE) ? pattern : null,
-                targets.contains(SEARCH_BY_DIRECTOR) ? pattern : null);
+        List<Film> films = filmRepository.searchFilms(query, targets);
 
         log.info("Поиск фильмов: query={}, by={}, найдено {}", query, by, films.size());
 
         return films;
     }
 
-    private Set<String> parseSearchTargets(String by) {
+    private Set<SearchTarget> parseSearchTargets(String by) {
         if (by == null) {
             throw new ApiException(ErrorCode.SEARCH_BY_INVALID, by);
         }
 
-        Set<String> targets = Arrays.stream(by.split(","))
+        Set<SearchTarget> targets = Arrays.stream(by.split(","))
                 .map(target -> target.trim().toLowerCase(Locale.ROOT))
                 .filter(target -> !target.isEmpty())
+                .map(this::toSearchTarget)
                 .collect(Collectors.toSet());
 
         if (targets.isEmpty()) {
             throw new ApiException(ErrorCode.SEARCH_BY_INVALID, by);
         }
 
-        for (String target : targets) {
-            if (!SEARCH_TARGETS.contains(target)) {
-                throw new ApiException(ErrorCode.SEARCH_BY_INVALID, target);
-            }
-        }
-
         return targets;
+    }
+
+    private SearchTarget toSearchTarget(String target) {
+        try {
+            return SearchTarget.valueOf(target);
+        } catch (IllegalArgumentException e) {
+            throw new ApiException(ErrorCode.SEARCH_BY_INVALID, target);
+        }
     }
 }
