@@ -433,7 +433,6 @@ class FilmRepositoryTest {
         Director director = new Director();
         director.setName(name);
         return director;
-        filmRepository.addLike(film.getId(), user.getId());
     }
 
     private Film validFilm() {
